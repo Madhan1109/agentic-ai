@@ -22,6 +22,7 @@ class TokenResponse(BaseModel):
     full_name: str
     email: str
     department: str
+    employment_type: str = ""
 
 
 class ChatMessage(BaseModel):

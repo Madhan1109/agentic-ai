@@ -332,6 +332,98 @@ def get_recent_leave_requests(
         return json.dumps({"employee_id": emp.employee_id, "requests": payload}, indent=2)
 
 
+@tool
+def get_hr_insights() -> str:
+    """Proactive HR briefing for the signed-in employee: probation countdown, pending leave, remaining balances, and suggested next action."""
+    with _session() as session:
+        emp = _require_employee(session)
+        tenure_days = (date.today() - emp.join_date).days
+        year = date.today().year
+        bals = session.query(LeaveBalance).filter(LeaveBalance.employee_pk == emp.id, LeaveBalance.year == year).all()
+        pending = (
+            session.query(LeaveRequest)
+            .filter(LeaveRequest.employee_pk == emp.id, LeaveRequest.status == "pending")
+            .all()
+        )
+        alerts: list[str] = []
+        if emp.employment_type == "contractor":
+            alerts.append("Contractor record: company paid leave is not entitled.")
+        elif tenure_days < 90:
+            alerts.append(f"Probation: {90 - tenure_days} day(s) left before PL/CL is generally usable.")
+        else:
+            alerts.append("Past probation: privilege and casual leave are generally usable.")
+
+        if pending:
+            alerts.append(
+                "Pending request(s): "
+                + ", ".join(f"{p.leave_type} {p.start_date} ({p.days:g}d)" for p in pending)
+            )
+        else:
+            alerts.append("No pending leave requests.")
+
+        remaining = {b.leave_type: b.available for b in bals}
+        next_action = "Ask a leave or policy question, or request a manager draft."
+        if emp.employment_type == "contractor":
+            next_action = "Use the SoW / manager for time off; this agent will not grant company leave."
+        elif tenure_days < 90:
+            next_action = "Use sick leave if unwell; wait on privilege leave until day 90 unless HRBP approves an exception."
+        elif remaining.get("SL", 0) <= 2:
+            next_action = "Sick balance is low — plan carefully and keep medical notes if absences reach 3 consecutive days."
+
+        return json.dumps(
+            {
+                "employee_id": emp.employee_id,
+                "full_name": emp.full_name,
+                "employment_type": emp.employment_type,
+                "tenure_days": tenure_days,
+                "remaining": remaining,
+                "alerts": alerts,
+                "next_action": next_action,
+            },
+            indent=2,
+        )
+
+
+@tool
+def draft_manager_leave_note(
+    leave_type: Annotated[str, "PL, SL, or CL"],
+    days: Annotated[float, "Number of days requested"] = 1.0,
+    reason: Annotated[str, "Short reason from the employee"] = "personal",
+) -> str:
+    """Draft a short manager-ready leave request using this employee's real manager email and leave balances. Does not send email."""
+    lt = leave_type.upper().strip()
+    with _session() as session:
+        emp = _require_employee(session)
+        bal = (
+            session.query(LeaveBalance)
+            .filter(
+                LeaveBalance.employee_pk == emp.id,
+                LeaveBalance.year == date.today().year,
+                LeaveBalance.leave_type == lt,
+            )
+            .first()
+        )
+        available = bal.available if bal else 0.0
+        subject = f"Leave request: {lt} ({days:g} day(s)) — {emp.full_name}"
+        body = (
+            f"Hi,\n\n"
+            f"I would like to request {days:g} day(s) of {lt}. Reason: {reason}.\n"
+            f"HR system available balance for {lt}: {available} day(s).\n"
+            f"Please let me know if you approve.\n\n"
+            f"Thanks,\n{emp.full_name}\n{emp.employee_id} | {emp.department}"
+        )
+        return json.dumps(
+            {
+                "to": emp.manager_email,
+                "subject": subject,
+                "body": body,
+                "sufficient_balance": available >= days if bal else False,
+                "note": "Draft only — not sent. Employee copies this to email or Slack.",
+            },
+            indent=2,
+        )
+
+
 HR_TOOLS = [
     search_hr_policies,
     get_employee_profile,
@@ -340,4 +432,6 @@ HR_TOOLS = [
     calculate_leave_days,
     evaluate_leave_scenario,
     get_recent_leave_requests,
+    get_hr_insights,
+    draft_manager_leave_note,
 ]

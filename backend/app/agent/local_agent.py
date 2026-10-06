@@ -7,10 +7,13 @@ import re
 from typing import Any
 
 from backend.app.agent.tools import (
+    CURRENT_EMPLOYEE_ID,
     calculate_leave_days,
     check_leave_eligibility,
+    draft_manager_leave_note,
     evaluate_leave_scenario,
     get_employee_profile,
+    get_hr_insights,
     get_leave_balance,
     get_recent_leave_requests,
     search_hr_policies,
@@ -128,6 +131,50 @@ def _already_taken(text: str) -> float | None:
     return _first_number_before(q, ("leave this month", "this month", "already"))
 
 
+def _wellbeing_note(q: str) -> str:
+    if any(
+        w in q
+        for w in (
+            "burnout",
+            "overwhelmed",
+            "can't cope",
+            "cannot cope",
+            "depressed",
+            "anxious",
+            "mental health",
+            "not okay",
+            "struggling",
+        )
+    ):
+        return (
+            "\n\nIf you are struggling, I2I Employee Assistance (EAP) is confidential and 24/7. "
+            "See benefits policy or contact benefits@i2icorp.example — this chat does not replace EAP."
+        )
+    return ""
+
+
+_OTHER_PEOPLE = {
+    "alice": "E1001",
+    "nguyen": "E1001",
+    "cara": "E1003",
+    "devon": "E2001",
+    "brooks": "E2001",
+    "bob": "E1002",
+    "martinez": "E1002",
+}
+
+
+def _privacy_block(q: str) -> str | None:
+    me = (CURRENT_EMPLOYEE_ID or "").upper()
+    for name, emp_id in _OTHER_PEOPLE.items():
+        if re.search(rf"\b{name}\b", q) and emp_id != me:
+            return (
+                "I can only discuss the signed-in employee's own HR record. "
+                "I cannot share another person's leave or profile. Sign in as that employee, or ask HRBP through official channels."
+            )
+    return None
+
+
 def _combined_text(user_message: str, history: list[dict[str, str]] | None) -> str:
     prior = " ".join(
         m.get("content", "") for m in (history or [])[-6:] if m.get("role") == "user"
@@ -186,6 +233,36 @@ def run_local_hr_agent(
     ctx = _combined_text(user_message, history).lower()
     trace: list[dict] = []
     lt = _detect_leave_type(user_message, default=_detect_leave_type(ctx, default="PL"))
+    note = _wellbeing_note(q)
+
+    blocked = _privacy_block(q)
+    if blocked:
+        return {"answer": blocked + note, "tool_trace": trace, "llm_provider": "local"}
+
+    if any(w in q for w in ("insight", "should i know", "what should i know", "briefing", "anything pending", "proactive")):
+        data = _parse_json(_call(get_hr_insights, {}, trace))
+        alerts = " ".join(data.get("alerts") or [])
+        answer = f"{alerts} Next: {data.get('next_action', '')}".strip() + note
+        return {"answer": answer, "tool_trace": trace, "llm_provider": "local"}
+
+    if any(w in q for w in ("draft", "email my manager", "write to my manager", "message for my manager", "manager note")):
+        days = _extra_days(user_message)
+        data = _parse_json(
+            _call(
+                draft_manager_leave_note,
+                {
+                    "leave_type": lt if lt in {"PL", "SL", "CL"} else "PL",
+                    "days": days,
+                    "reason": "as discussed",
+                },
+                trace,
+            )
+        )
+        answer = (
+            f"Draft only (not sent). To: {data.get('to')}\n"
+            f"Subject: {data.get('subject')}\n\n{data.get('body')}"
+        ) + note
+        return {"answer": answer, "tool_trace": trace, "llm_provider": "local"}
 
     wants_scenario = _is_scenario(q)
     wants_balance = any(

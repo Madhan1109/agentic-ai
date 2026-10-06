@@ -93,6 +93,7 @@ def login(body: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
         full_name=employee.full_name,
         email=employee.email,
         department=employee.department,
+        employment_type=employee.employment_type,
     )
 
 

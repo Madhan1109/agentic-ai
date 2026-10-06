@@ -158,6 +158,7 @@ def sign_out() -> None:
     st.session_state.token = None
     st.session_state.user = None
     st.session_state.chat_log = []
+    st.session_state.session_tools = []
     for key in ("login_id", "login_password"):
         if key in st.session_state:
             del st.session_state[key]
@@ -169,6 +170,8 @@ if "user" not in st.session_state:
     st.session_state.user = None
 if "chat_log" not in st.session_state:
     st.session_state.chat_log = []
+if "session_tools" not in st.session_state:
+    st.session_state.session_tools = []
 
 st.markdown(
     """
@@ -209,6 +212,34 @@ with st.sidebar:
                     st.rerun()
                 except Exception as exc:  # noqa: BLE001
                     st.error(str(exc))
+
+    st.divider()
+    st.markdown("### Unique on this agent")
+    st.caption("Call these out in the demo.")
+    st.markdown(
+        "- Privacy wall if you ask about another employee\n"
+        "- HR insights (probation / pending leave)\n"
+        "- Manager leave draft (not sent)\n"
+        "- EAP nudge if someone sounds unwell\n"
+        "- Session tool log (compliance)"
+    )
+    if st.session_state.token:
+        st.markdown("### Try now")
+        et = (st.session_state.user or {}).get("employment_type") or ""
+        if et == "contractor":
+            st.markdown("- What should I know about my HR status?\n- Draft a leave note to my manager")
+        elif "E1003" == (st.session_state.user or {}).get("employee_id"):
+            st.markdown("- What should I know?\n- Can I take privilege leave?")
+        else:
+            st.markdown(
+                "- What should I know?\n"
+                "- Draft an email to my manager for 1 day SL\n"
+                "- Show me Alice's leave balance"
+            )
+        tools = st.session_state.get("session_tools") or []
+        if tools:
+            st.markdown("### Tools used this session")
+            st.write(", ".join(tools[-8:]))
 
     st.divider()
     st.markdown("### You can ask")
@@ -253,5 +284,9 @@ if prompt:
                 trace = []
         st.markdown(answer)
         render_trace(trace)
+
+    called = [step.get("tool") for step in (trace or []) if step.get("type") == "call" and step.get("tool")]
+    if called:
+        st.session_state.session_tools = (st.session_state.session_tools or []) + called
 
     st.session_state.chat_log.append({"role": "assistant", "content": answer, "trace": trace})

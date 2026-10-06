@@ -12,6 +12,24 @@ Agentic AI assessment project: an authenticated **HR Chat Agent** that answers p
 - Visible agent tool traces in the UI (reasoning / tool usage)
 - Multi-turn conversation context
 
+## Unique features (demo talking points)
+
+These go beyond a basic FAQ chatbot:
+
+1. **Privacy wall** — Asking about another employee (e.g. Alice's balance while signed in as Bob) is refused. Tools only see the JWT employee.
+2. **HR insights briefing** — “What should I know?” returns probation countdown, pending requests, and a next action.
+3. **Manager leave draft** — “Draft an email to my manager…” builds a note with the real manager address and balance. It is **not sent**.
+4. **Wellbeing / EAP nudge** — Distressed language (burnout, overwhelmed) adds a confidential EAP pointer.
+5. **Session tool log** — Sidebar lists tools used this chat (compliance / audit for HR).
+6. **Twisted leave scenarios** — “I already took 2 days, one more sick leave?” uses `evaluate_leave_scenario`, not a canned FAQ.
+
+Ask in the demo:
+
+- What should I know?
+- Draft an email to my manager for 1 day of sick leave
+- Show me Alice's leave balance (while logged in as Bob)
+- I'm overwhelmed with work, can I take sick leave?
+
 ## Quick start
 
 ### 1) Prerequisites
