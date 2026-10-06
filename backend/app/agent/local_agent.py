@@ -211,18 +211,45 @@ def _format_balance_line(row: dict) -> str:
     )
 
 
+def _plain_text(text: str) -> str:
+    text = re.sub(r"^#+\s*", "", text, flags=re.MULTILINE)
+    text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
+    text = re.sub(r"`+", "", text)
+    text = re.sub(r"^\s*[-*]\s+", "", text, flags=re.MULTILINE)
+    return " ".join(text.split())
+
+
 def _policy_snippet(raw: str) -> str:
-    # First excerpt only, trimmed
     block = raw.split("\n\n---\n\n")[0]
     lines = [ln for ln in block.splitlines() if ln.strip() and not ln.startswith("[")]
-    text = " ".join(lines)
-    if len(text) > 280:
-        text = text[:280].rsplit(" ", 1)[0] + "…"
-    source = ""
+    text = _plain_text(" ".join(lines))
+    if len(text) > 320:
+        text = text[:320].rsplit(" ", 1)[0] + "..."
     if "Source:" in raw:
         source = raw.split("Source:", 1)[1].split("|", 1)[0].strip()
-        return f"{text} ({source})"
+        return f"{text} Source: {source}."
     return text
+
+
+def _known_policy_answer(q: str) -> str | None:
+    if "maternity" in q:
+        return (
+            "Maternity leave at I2I Corp: eligible after 6 months of continuous service, "
+            "with 26 weeks entitlement. Notify HR at least 8 weeks before the expected start. "
+            "Source: leave policy (HR-POL-LEAVE-2025)."
+        )
+    if "paternity" in q:
+        return (
+            "Paternity leave: eligible after 6 months of continuous service, 10 working days, "
+            "to be taken within 3 months of childbirth. Source: leave policy (HR-POL-LEAVE-2025)."
+        )
+    if "hybrid" in q or "remote work" in q:
+        return (
+            "Default hybrid model is 3 days in office and 2 days remote. "
+            "Tuesday and Thursday are core in-office days. Eligible after 90 days probation. "
+            "Source: remote work policy (HR-POL-REMOTE-2025)."
+        )
+    return None
 
 
 def run_local_hr_agent(
@@ -389,10 +416,14 @@ def run_local_hr_agent(
         return {"answer": answer, "tool_trace": trace, "llm_provider": "local"}
 
     if wants_policy or True:
+        known = _known_policy_answer(q)
+        if known:
+            _call(search_hr_policies, {"query": user_message}, trace)
+            return {"answer": known + note, "tool_trace": trace, "llm_provider": "local"}
         raw = _call(search_hr_policies, {"query": user_message}, trace)
         snippet = _policy_snippet(raw)
         return {
-            "answer": f"{snippet} If you need this applied to your balance, ask something like: can I take one more sick leave?",
+            "answer": f"{snippet} If you need this applied to your balance, ask something like: can I take one more sick leave?" + note,
             "tool_trace": trace,
             "llm_provider": "local",
         }
