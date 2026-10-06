@@ -1,4 +1,4 @@
-"""Streamlit chat UI for the 12I Corp HR Chat Agent."""
+"""Streamlit chat UI for the I2I Corp HR Chat Agent."""
 
 from __future__ import annotations
 
@@ -14,8 +14,8 @@ load_dotenv()
 API_BASE = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
 
 st.set_page_config(
-    page_title="12I Corp | HR Assistant",
-    page_icon="✦",
+    page_title="I2I Corp | HR Assistant",
+    page_icon="💬",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -23,87 +23,84 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap');
+      /* Hide Streamlit chrome that shows as a blank white bar over the title */
+      header[data-testid="stHeader"] {
+        background: transparent !important;
+        height: 0 !important;
+      }
+      header[data-testid="stHeader"] * { display: none !important; }
+      [data-testid="stToolbar"],
+      [data-testid="stDecoration"],
+      [data-testid="stStatusWidget"],
+      .stDeployButton,
+      #MainMenu,
+      footer { display: none !important; visibility: hidden !important; }
 
-      html, body, [class*="css"] {
-        font-family: Outfit, system-ui, sans-serif;
+      .stApp, .stApp p, .stApp span, .stApp label, .stApp li {
+        color: #1a1a1a !important;
       }
-      .stApp {
-        background:
-          radial-gradient(1200px 600px at -10% -10%, #2b4cff33 0%, transparent 55%),
-          radial-gradient(900px 500px at 110% 0%, #ff7a3d22 0%, transparent 50%),
-          linear-gradient(180deg, #070b16 0%, #10182c 48%, #0b1020 100%);
-        color: #eef2ff;
-      }
-      .block-container { padding-top: 1.1rem; max-width: 1180px; }
+      .stApp { background: #f4f6f8; }
+      .block-container { padding-top: 1.25rem; max-width: 920px; }
+
       [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0d1428 0%, #111c36 100%);
-        border-right: 1px solid #2a3a68;
+        background: #ffffff;
+        border-right: 1px solid #e2e6ea;
       }
-      [data-testid="stSidebar"] * { color: #e8edff; }
+      [data-testid="stSidebar"] * { color: #1a1a1a !important; }
+
       .hero {
-        position: relative;
-        overflow: hidden;
-        background: linear-gradient(120deg, #121c3a 0%, #1b2b5c 42%, #c45c26 160%);
-        border: 1px solid #3d4f88;
-        color: #f7f3ee;
-        padding: 1.55rem 1.7rem 1.45rem;
-        border-radius: 22px;
-        margin-bottom: 1.1rem;
-        box-shadow: 0 18px 50px rgba(8, 12, 28, 0.45);
+        background: #1e4d7b;
+        color: #ffffff;
+        padding: 1.15rem 1.35rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
       }
-      .hero::after {
-        content: "";
-        position: absolute;
-        width: 240px; height: 240px;
-        right: -40px; top: -70px;
-        background: radial-gradient(circle, #ffd29a55, transparent 68%);
-        pointer-events: none;
-      }
-      .eyebrow {
-        letter-spacing: 0.18em;
-        font-size: 0.72rem;
+      .hero .eyebrow {
+        margin: 0 0 0.25rem;
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: #ffd7a8;
-        margin: 0 0 0.35rem;
-        font-weight: 600;
+        opacity: 0.9;
       }
       .hero h1 {
         margin: 0;
-        font-family: Fraunces, Georgia, serif;
-        font-size: 2.05rem;
-        line-height: 1.15;
+        font-size: 1.55rem;
+        font-weight: 650;
+        color: #ffffff !important;
       }
-      .hero p { margin: 0.45rem 0 0; opacity: 0.9; font-size: 1.02rem; }
-      .chip-row { display: flex; gap: 0.45rem; flex-wrap: wrap; margin-top: 0.85rem; }
-      .chip {
-        font-size: 0.78rem;
-        padding: 0.28rem 0.65rem;
-        border-radius: 999px;
-        background: #ffffff14;
-        border: 1px solid #ffffff22;
+      .hero p {
+        margin: 0.35rem 0 0;
+        color: #eef4fa !important;
+        font-size: 0.95rem;
       }
-      .stChatMessage { background: transparent; }
+
       [data-testid="stChatMessage"] {
-        background: #162242cc;
-        border: 1px solid #334675;
-        border-radius: 16px;
-        padding: 0.35rem 0.4rem;
-        margin-bottom: 0.55rem;
+        background: #ffffff !important;
+        color: #1a1a1a !important;
+        border: 1px solid #e5e8eb;
+        border-radius: 10px;
+        padding: 0.55rem 0.7rem;
       }
+      [data-testid="stChatMessage"] p,
+      [data-testid="stChatMessage"] li,
+      [data-testid="stChatMessage"] span {
+        color: #1a1a1a !important;
+      }
+      [data-testid="stChatMessage"] code {
+        background: #f0f2f4 !important;
+        color: #111 !important;
+      }
+
       .stButton>button {
-        background: linear-gradient(90deg, #3b6dff, #6a4dff);
-        color: white;
+        background: #1e4d7b;
+        color: #ffffff !important;
         border: 0;
-        border-radius: 12px;
-        font-weight: 600;
+        border-radius: 8px;
       }
       .stTextInput input {
-        background: #0c1428 !important;
-        color: #f4f7ff !important;
-        border-radius: 12px !important;
+        background: #ffffff !important;
+        color: #1a1a1a !important;
       }
-      h1, h2, h3 { font-family: Fraunces, Georgia, serif; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -158,14 +155,9 @@ if "chat_log" not in st.session_state:
 st.markdown(
     """
     <div class="hero">
-      <p class="eyebrow">12I Corp People Experience</p>
+      <p class="eyebrow">I2I Corp People Experience</p>
       <h1>HR Chat Agent</h1>
-      <p>Ask about leave, eligibility, and policy — grounded in your record and company documents.</p>
-      <div class="chip-row">
-        <span class="chip">Secure sign-in</span>
-        <span class="chip">Policy-aware</span>
-        <span class="chip">Live leave tools</span>
-      </div>
+      <p>Ask about leave, eligibility, and policy. Answers use your record and company documents.</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -173,7 +165,7 @@ st.markdown(
 
 with st.sidebar:
     st.markdown("### Sign in")
-    st.caption("Use your 12I Corp work email.")
+    st.caption("Use your I2I Corp work email.")
     if st.session_state.token:
         u = st.session_state.user
         st.markdown(f"**{u['full_name']}**")
@@ -185,7 +177,7 @@ with st.sidebar:
             st.session_state.chat_log = []
             st.rerun()
     else:
-        email = st.text_input("Work email", placeholder="you@12icorp.example")
+        email = st.text_input("Work email", placeholder="you@i2icorp.example")
         password = st.text_input("Password", type="password")
         if st.button("Continue", type="primary", use_container_width=True):
             try:
@@ -207,8 +199,7 @@ with st.sidebar:
     )
 
 if not st.session_state.token:
-    st.markdown("#### Welcome")
-    st.write("Sign in on the left to start a private HR conversation. Answers use your employee record and 12I Corp policies.")
+    st.write("Sign in on the left to start a private HR conversation.")
     st.stop()
 
 for msg in st.session_state.chat_log:

@@ -1,4 +1,4 @@
-# Remote Work & Hybrid Policy — 12I Corp HR
+# Remote Work & Hybrid Policy — I2I Corp HR
 
 **Document ID:** HR-POL-REMOTE-2025  
 **Effective Date:** January 1, 2025
@@ -29,4 +29,4 @@
 - Longer arrangements require HRBP approval.
 
 ## 6. Contact
-hybrid-work@12icorp.example
+hybrid-work@i2icorp.example

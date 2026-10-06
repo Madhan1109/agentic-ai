@@ -1,11 +1,11 @@
-# Leave Policy — 12I Corp HR
+# Leave Policy — I2I Corp HR
 
 **Document ID:** HR-POL-LEAVE-2025  
 **Effective Date:** January 1, 2025  
 **Owner:** Human Resources
 
 ## 1. Purpose
-This policy defines employee leave entitlements, eligibility, accrual rules, and request procedures at 12I Corp.
+This policy defines employee leave entitlements, eligibility, accrual rules, and request procedures at I2I Corp.
 
 ## 2. Leave Types
 
@@ -65,7 +65,7 @@ This policy defines employee leave entitlements, eligibility, accrual rules, and
 4. Blackout periods (e.g., year-end close, major releases) may restrict PL; exceptions require Director approval.
 
 ## 6. Public Holidays
-12I Corp observes **12 public holidays** annually. A separate holiday calendar is published each December for the following year. Public holidays do not consume leave balances.
+I2I Corp observes **12 public holidays** annually. A separate holiday calendar is published each December for the following year. Public holidays do not consume leave balances.
 
 ## 7. Contact
-For policy clarifications: hr-support@12icorp.example
+For policy clarifications: hr-support@i2icorp.example

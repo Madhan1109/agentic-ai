@@ -28,7 +28,7 @@ def main() -> None:
 
     Session = get_session_factory()
     with Session() as session:
-        emp = authenticate_employee(session, "alice.nguyen@12icorp.example", "Password@123")
+        emp = authenticate_employee(session, "alice.nguyen@i2icorp.example", "Password@123")
         assert emp is not None, "login failed"
         token = create_access_token({"sub": emp.email, "employee_id": emp.employee_id})
         payload = decode_access_token(token)

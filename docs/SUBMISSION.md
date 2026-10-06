@@ -4,7 +4,7 @@ Fill the official submission form with:
 
 | Field | Value |
 |-------|-------|
-| Project name | 12I Corp HR Chat Agent |
+| Project name | I2I Corp HR Chat Agent |
 | GitHub public repo | *(add after you push)* |
 | Demo video | *(record using docs/DEMO_SCRIPT.md; upload to Drive/YouTube unlisted)* |
 | Architecture docs | `docs/ARCHITECTURE.md` |

@@ -1,4 +1,4 @@
-# Architecture — 12I Corp HR Chat Agent
+# Architecture — I2I Corp HR Chat Agent
 
 ## Overview
 

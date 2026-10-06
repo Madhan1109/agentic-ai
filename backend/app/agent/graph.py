@@ -13,7 +13,7 @@ from backend.app.agent.llm import build_llm, resolve_llm_provider
 from backend.app.agent.local_agent import run_local_hr_agent
 from backend.app.agent.tools import HR_TOOLS
 
-SYSTEM_PROMPT = """You are 12I Corp's HR Chat Agent for one authenticated employee.
+SYSTEM_PROMPT = """You are I2I Corp's HR Chat Agent for one authenticated employee.
 
 ## How to think
 Listen to messy, human questions. Examples:

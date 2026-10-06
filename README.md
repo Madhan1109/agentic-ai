@@ -1,4 +1,4 @@
-# 12I Corp HR Chat Agent
+# I2I Corp HR Chat Agent
 
 Agentic AI assessment project: an authenticated **HR Chat Agent** that answers policy questions from HR documents and uses tools/database lookups for leave balance, eligibility, and leave-day calculations.
 
@@ -50,7 +50,16 @@ Open:
 - Chat UI: http://localhost:8501
 - API docs: http://127.0.0.1:8000/docs
 
-Sign in from the UI with a seeded employee account from `scripts/seed_db.py`.
+Sign in from the UI with a seeded employee. Each person has **one** employment type — switch account to see a different policy outcome.
+
+| Login | Type | What the agent is allowed to do |
+|-------|------|----------------------------------|
+| Alice | Full-time | Leave balance, eligibility, extra sick days, policy |
+| Cara | Probation (&lt; 90 days) | Limited — PL/CL generally blocked; some SL |
+| Devon | Contractor | No company leave entitlements |
+| Bob | Full-time HRBP | Same leave tools as an employee; title is HRBP, not a superuser |
+
+Seed records live in `backend/app/db/seed.py` (not listed here).
 
 ## Example questions
 
