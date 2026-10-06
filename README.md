@@ -12,7 +12,7 @@ Agentic AI assessment project: an authenticated **HR Chat Agent** that answers p
 - Visible agent tool traces in the UI (reasoning / tool usage)
 - Multi-turn conversation context
 
-## Unique features (demo talking points)
+## Unique features
 
 These go beyond a basic FAQ chatbot:
 
