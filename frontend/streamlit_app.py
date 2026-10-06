@@ -174,7 +174,7 @@ st.markdown(
 
 with st.sidebar:
     st.markdown("### Sign in")
-    st.caption("Use your I2I Corp work email.")
+    st.caption("Work email or employee ID. Password is the seeded account password.")
     if st.session_state.token:
         u = st.session_state.user
         st.markdown(f"**{u['full_name']}**")
@@ -186,11 +186,11 @@ with st.sidebar:
             st.session_state.chat_log = []
             st.rerun()
     else:
-        email = st.text_input("Work email", placeholder="you@i2icorp.example")
-        password = st.text_input("Password", type="password")
+        email = st.text_input("Email or employee ID", key="login_id", placeholder="E1001")
+        password = st.text_input("Password", type="password", key="login_password")
         if st.button("Continue", type="primary", use_container_width=True):
             try:
-                data = api_login(email.strip(), password)
+                data = api_login(email.replace("＠", "@").strip(), password)
                 st.session_state.token = data["access_token"]
                 st.session_state.user = data
                 st.rerun()

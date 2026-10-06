@@ -77,9 +77,9 @@ def health() -> HealthResponse:
 
 @app.post("/auth/login", response_model=TokenResponse)
 def login(body: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
-    employee = authenticate_employee(db, body.email.lower().strip(), body.password)
+    employee = authenticate_employee(db, body.email, body.password)
     if not employee:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email, employee ID, or password")
     token = create_access_token(
         {
             "sub": employee.email,

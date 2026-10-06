@@ -15,8 +15,21 @@ def verify_password(plain_password: str, password_hash: str) -> bool:
     return pwd_context.verify(plain_password, password_hash)
 
 
-def authenticate_employee(session: Session, email: str, password: str) -> Employee | None:
-    employee = session.query(Employee).filter(Employee.email == email, Employee.is_active.is_(True)).first()
+def authenticate_employee(session: Session, login: str, password: str) -> Employee | None:
+    login = (login or "").strip().lower()
+    employee = session.query(Employee).filter(Employee.email == login, Employee.is_active.is_(True)).first()
+    if not employee:
+        employee = (
+            session.query(Employee)
+            .filter(Employee.employee_id == login.upper(), Employee.is_active.is_(True))
+            .first()
+        )
+    if not employee:
+        employee = (
+            session.query(Employee)
+            .filter(Employee.employee_id == login, Employee.is_active.is_(True))
+            .first()
+        )
     if not employee or not verify_password(password, employee.password_hash):
         return None
     return employee

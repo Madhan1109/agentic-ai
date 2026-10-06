@@ -7,11 +7,12 @@ class LoginRequest(BaseModel):
 
     @field_validator("email")
     @classmethod
-    def normalize_email(cls, value: str) -> str:
-        email = (value or "").strip().lower()
-        if "@" not in email:
-            raise ValueError("Enter a full work email, including @")
-        return email
+    def normalize_login(cls, value: str) -> str:
+        login = (value or "").strip()
+        login = login.replace("＠", "@").replace("[at]", "@")
+        if not login:
+            raise ValueError("Enter your work email or employee ID (for example E1001)")
+        return login.lower()
 
 
 class TokenResponse(BaseModel):
