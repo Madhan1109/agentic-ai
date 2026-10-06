@@ -1,4 +1,4 @@
-# Architecture — Acme Corp HR Chat Agent
+# Architecture — 12I Corp HR Chat Agent
 
 ## Overview
 

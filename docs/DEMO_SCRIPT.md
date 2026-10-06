@@ -17,8 +17,8 @@ Use this script for the assessment demo video (~5–8 minutes).
 
 ## Scene 2 — Authentication (30s)
 
-1. Sign in as `alice.nguyen@acmecorp.example` / `Password@123`
-2. Show sidebar employee identity (E1001, Engineering)
+1. Sign in as a full-time employee from the seeded HR database
+2. Show sidebar employee identity (name, department)
 
 ## Scene 3 — Policy question (RAG tool) (60s)
 
@@ -41,7 +41,7 @@ Ask:
 Expected:
 
 - Calls `get_leave_balance`
-- Shows PL/SL/CL entitled, used, pending, available for Alice
+- Shows PL/SL/CL entitled, used, pending, available for that employee
 
 ## Scene 5 — Eligibility + calculation (multi-tool) (90s)
 
@@ -52,20 +52,20 @@ Ask:
 Expected:
 
 - Calls `check_leave_eligibility` and/or `calculate_leave_days` (and maybe balance)
-- Explains eligibility (Alice is past probation)
+- Explains eligibility (full-time employee past probation)
 - Calculates working days (exclude weekend) and compares to available balance
 
 ## Scene 6 — Context / different persona (60s)
 
 1. Sign out
-2. Sign in as `cara.lee@acmecorp.example` (probation)
+2. Sign in as a probationary employee from the seed data
 3. Ask: `Can I take privilege leave?`
 
 Expected:
 
 - Eligibility tool returns **not eligible** (< 90 days)
 
-Optional: sign in as contractor `devon.contractor@acmecorp.example` and show no leave entitlements.
+Optional: sign in as a contractor from the seed data and show no leave entitlements.
 
 ## Scene 7 — Wrap-up (30s)
 

@@ -85,13 +85,7 @@ Open browser: **http://localhost:8501**
 
 ### 8) Login and demo
 
-| Email | Password |
-|-------|----------|
-| `alice.nguyen@acmecorp.example` | `Password@123` |
-| `cara.lee@acmecorp.example` | `Password@123` (probation) |
-| `devon.contractor@acmecorp.example` | `Password@123` (contractor) |
-
-Try asking:
+Sign in with a seeded employee account, then try asking:
 
 - What is my leave balance?
 - Am I eligible for privilege leave?

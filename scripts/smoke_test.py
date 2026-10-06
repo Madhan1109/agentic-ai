@@ -9,6 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from backend.app.agent.graph import run_hr_agent
 from backend.app.agent.rag import get_retriever
 from backend.app.agent.tools import (
     calculate_leave_days,
@@ -27,7 +28,7 @@ def main() -> None:
 
     Session = get_session_factory()
     with Session() as session:
-        emp = authenticate_employee(session, "alice.nguyen@acmecorp.example", "Password@123")
+        emp = authenticate_employee(session, "alice.nguyen@12icorp.example", "Password@123")
         assert emp is not None, "login failed"
         token = create_access_token({"sub": emp.email, "employee_id": emp.employee_id})
         payload = decode_access_token(token)
@@ -45,12 +46,18 @@ def main() -> None:
         {"start_date": "2026-10-20", "end_date": "2026-10-24", "leave_type": "PL", "half_day": False}
     )
     policy = search_hr_policies.invoke({"query": "hybrid work office days"})
+    result = run_hr_agent(
+        "I took 2 days leave this month & shall I take one more sick leave on this month"
+    )
     set_current_employee(None)
 
     print("OK leave balance tool chars:", len(bal))
     print("OK eligibility tool chars:", len(elig))
     print("OK calculate tool chars:", len(calc))
     print("OK policy tool chars:", len(policy))
+    print("OK scenario:", result["answer"])
+    assert "Yes" in result["answer"] or "No" in result["answer"]
+    assert "```" not in result["answer"]
     print("SMOKE TEST PASSED")
 
 

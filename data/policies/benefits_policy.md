@@ -1,4 +1,4 @@
-# Employee Benefits Policy — Acme Corp HR
+# Employee Benefits Policy — 12I Corp HR
 
 **Document ID:** HR-POL-BEN-2025  
 **Effective Date:** January 1, 2025
@@ -25,4 +25,4 @@
 - Successful referral of a full-time hire: **$1,500** after the new hire completes **90 days**.
 
 ## 6. Contact
-benefits@acmecorp.example
+benefits@12icorp.example

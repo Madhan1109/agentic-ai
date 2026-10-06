@@ -4,7 +4,7 @@ Fill the official submission form with:
 
 | Field | Value |
 |-------|-------|
-| Project name | Acme Corp HR Chat Agent |
+| Project name | 12I Corp HR Chat Agent |
 | GitHub public repo | *(add after you push)* |
 | Demo video | *(record using docs/DEMO_SCRIPT.md; upload to Drive/YouTube unlisted)* |
 | Architecture docs | `docs/ARCHITECTURE.md` |
@@ -18,17 +18,6 @@ Fill the official submission form with:
 - Tools + database for leave balance, eligibility, and leave-day calculation
 - Agent reasoning / tool-calling workflow with visible traces in the UI
 - Conversation history for follow-up context
-
-## Demo accounts
-
-Password for all: `Password@123`
-
-| Email | Persona |
-|-------|---------|
-| alice.nguyen@acmecorp.example | Full-time engineer with balances |
-| bob.martinez@acmecorp.example | HRBP |
-| cara.lee@acmecorp.example | Probationary (eligibility edge case) |
-| devon.contractor@acmecorp.example | Contractor (no leave) |
 
 ## Push to GitHub (public)
 

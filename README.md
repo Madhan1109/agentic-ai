@@ -1,4 +1,4 @@
-# Acme Corp HR Chat Agent
+# 12I Corp HR Chat Agent
 
 Agentic AI assessment project: an authenticated **HR Chat Agent** that answers policy questions from HR documents and uses tools/database lookups for leave balance, eligibility, and leave-day calculations.
 
@@ -50,16 +50,7 @@ Open:
 - Chat UI: http://localhost:8501
 - API docs: http://127.0.0.1:8000/docs
 
-## Demo logins
-
-Password for all accounts: `Password@123`
-
-| Email | Notes |
-|-------|-------|
-| `alice.nguyen@acmecorp.example` | Full-time, has leave balances + pending request |
-| `cara.lee@acmecorp.example` | Probation — PL/CL generally blocked |
-| `devon.contractor@acmecorp.example` | Contractor — no leave entitlements |
-| `bob.martinez@acmecorp.example` | HRBP persona |
+Sign in from the UI with a seeded employee account from `scripts/seed_db.py`.
 
 ## Example questions
 

@@ -1,4 +1,4 @@
-"""Zero-cost fallback: route questions to the same HR tools without a cloud LLM."""
+"""Zero-cost conversational HR agent: same tools, short natural answers."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from typing import Any
 from backend.app.agent.tools import (
     calculate_leave_days,
     check_leave_eligibility,
+    evaluate_leave_scenario,
     get_employee_profile,
     get_leave_balance,
     get_recent_leave_requests,
@@ -16,9 +17,24 @@ from backend.app.agent.tools import (
 )
 
 _DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
+_NUM_WORDS = {
+    "a": 1,
+    "an": 1,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+    "half": 0.5,
+}
 
 
-def _detect_leave_type(text: str) -> str:
+def _detect_leave_type(text: str, default: str | None = None) -> str:
     q = text.lower()
     if "maternity" in q:
         return "MATERNITY"
@@ -28,9 +44,30 @@ def _detect_leave_type(text: str) -> str:
         return "SL"
     if "casual" in q or re.search(r"\bcl\b", q):
         return "CL"
+    if "privilege" in q or "annual" in q or re.search(r"\bpl\b", q) or "pto" in q:
+        return "PL"
     if "comp" in q and "off" in q:
         return "COMP_OFF"
-    return "PL"
+    return default or "PL"
+
+
+def _label(lt: str) -> str:
+    return {
+        "PL": "privilege leave",
+        "SL": "sick leave",
+        "CL": "casual leave",
+        "MATERNITY": "maternity leave",
+        "PATERNITY": "paternity leave",
+        "COMP_OFF": "comp-off",
+    }.get(lt, lt)
+
+
+def _parse_json(raw: str) -> dict:
+    try:
+        data = json.loads(raw)
+        return data if isinstance(data, dict) else {}
+    except json.JSONDecodeError:
+        return {}
 
 
 def _call(tool, args: dict, trace: list[dict]) -> str:
@@ -38,23 +75,125 @@ def _call(tool, args: dict, trace: list[dict]) -> str:
     trace.append({"tool": name, "args": args, "type": "call"})
     output = tool.invoke(args)
     shown = output if isinstance(output, str) else json.dumps(output)
-    if len(shown) > 1200:
-        shown = shown[:1200] + "…"
+    if len(shown) > 800:
+        shown = shown[:800] + "…"
     trace.append({"tool": name, "output": shown, "type": "result"})
     return output if isinstance(output, str) else json.dumps(output)
 
 
-def run_local_hr_agent(user_message: str) -> dict[str, Any]:
-    q = user_message.lower()
-    trace: list[dict] = []
-    sections: list[str] = []
+def _first_number_before(text: str, keywords: tuple[str, ...]) -> float | None:
+    q = text.lower()
+    for kw in keywords:
+        m = re.search(rf"(\d+(?:\.\d+)?)\s*(?:days?|day)?\s*[^\n.]{{0,20}}{kw}", q)
+        if m:
+            return float(m.group(1))
+        m = re.search(rf"\b({'|'.join(_NUM_WORDS)})\s+(?:more\s+)?(?:days?|day)?\s*[^\n.]{{0,20}}{kw}", q)
+        if m:
+            return float(_NUM_WORDS[m.group(1)])
+    return None
 
-    wants_balance = any(w in q for w in ("balance", "how many days", "pto", "remaining leave", "leave left"))
-    wants_elig = any(w in q for w in ("eligib", "can i take", "am i allowed", "qualify"))
-    wants_calc = bool(_DATE.search(user_message)) or any(
-        w in q for w in ("calculat", "how many leave days", "deduct", "working day")
+
+def _extra_days(text: str) -> float:
+    q = text.lower()
+    if re.search(r"\bone more\b|\banother (?:one|day)\b|\bone extra\b", q):
+        return 1.0
+    if re.search(r"\bhalf[- ]?day\b", q):
+        return 0.5
+    m = re.search(r"(?:take|need|want|avail|apply).{0,24}(\d+(?:\.\d+)?)\s*days?", q)
+    if m:
+        return float(m.group(1))
+    m = re.search(rf"(?:take|need|want).{{0,16}}\b({'|'.join(_NUM_WORDS)})\b", q)
+    if m:
+        return float(_NUM_WORDS[m.group(1)])
+    m = re.search(r"(\d+(?:\.\d+)?)\s*more\s*days?", q)
+    if m:
+        return float(m.group(1))
+    return 1.0
+
+
+def _already_taken(text: str) -> float | None:
+    q = text.lower()
+    m = re.search(
+        r"(?:took|taken|availed|used|already)\s+(\d+(?:\.\d+)?)\s*days?",
+        q,
     )
-    wants_requests = any(w in q for w in ("request", "pending leave", "applied"))
+    if m:
+        return float(m.group(1))
+    m = re.search(
+        rf"(?:took|taken|availed|used|already)\s+\b({'|'.join(_NUM_WORDS)})\b",
+        q,
+    )
+    if m:
+        return float(_NUM_WORDS[m.group(1)])
+    return _first_number_before(q, ("leave this month", "this month", "already"))
+
+
+def _combined_text(user_message: str, history: list[dict[str, str]] | None) -> str:
+    prior = " ".join(
+        m.get("content", "") for m in (history or [])[-6:] if m.get("role") == "user"
+    )
+    return f"{prior} {user_message}".strip()
+
+
+def _is_scenario(q: str) -> bool:
+    extra = any(
+        w in q
+        for w in (
+            "one more",
+            "another",
+            "extra",
+            "shall i take",
+            "can i take",
+            "should i take",
+            "may i take",
+            "allowed to take",
+            "take leave",
+            "take sick",
+            "take one",
+        )
+    )
+    stated = any(w in q for w in ("took", "taken", "already", "this month", "availed"))
+    return extra or (stated and any(w in q for w in ("more", "another", "can i", "shall i")))
+
+
+def _format_balance_line(row: dict) -> str:
+    return (
+        f"- {_label(row['leave_type']).title()} ({row['leave_type']}): "
+        f"{row['available']} available "
+        f"(entitled {row['entitled']}, used {row['used']}, pending {row['pending']})"
+    )
+
+
+def _policy_snippet(raw: str) -> str:
+    # First excerpt only, trimmed
+    block = raw.split("\n\n---\n\n")[0]
+    lines = [ln for ln in block.splitlines() if ln.strip() and not ln.startswith("[")]
+    text = " ".join(lines)
+    if len(text) > 280:
+        text = text[:280].rsplit(" ", 1)[0] + "…"
+    source = ""
+    if "Source:" in raw:
+        source = raw.split("Source:", 1)[1].split("|", 1)[0].strip()
+        return f"{text} ({source})"
+    return text
+
+
+def run_local_hr_agent(
+    user_message: str,
+    history: list[dict[str, str]] | None = None,
+) -> dict[str, Any]:
+    q = user_message.lower()
+    ctx = _combined_text(user_message, history).lower()
+    trace: list[dict] = []
+    lt = _detect_leave_type(user_message, default=_detect_leave_type(ctx, default="PL"))
+
+    wants_scenario = _is_scenario(q)
+    wants_balance = any(
+        w in q for w in ("balance", "how many days left", "remaining", "leave left", "what's my leave", "what is my leave")
+    )
+    wants_elig = any(w in q for w in ("eligib", "am i allowed", "qualify", "can i take", "shall i take")) and not wants_scenario
+    wants_calc = bool(_DATE.search(user_message))
+    wants_requests = any(w in q for w in ("my request", "pending leave", "applied"))
     wants_profile = any(w in q for w in ("my profile", "who am i", "my department", "join date"))
     wants_policy = any(
         w in q
@@ -63,53 +202,120 @@ def run_local_hr_agent(user_message: str) -> dict[str, Any]:
             "maternity",
             "paternity",
             "hybrid",
-            "remote",
+            "remote work",
             "benefit",
-            "conduct",
+            "code of conduct",
             "holiday",
-            "what is",
+            "what is our",
             "explain",
         )
-    )
+    ) and not wants_scenario
 
-    if wants_profile:
-        raw = _call(get_employee_profile, {}, trace)
-        sections.append("**Profile**\n```json\n" + raw + "\n```")
+    if wants_scenario:
+        extra = _extra_days(user_message)
+        taken = _already_taken(user_message)
+        if lt not in {"PL", "SL", "CL"}:
+            lt = "SL" if "sick" in ctx else "PL"
+        args: dict[str, Any] = {"leave_type": lt, "extra_days": extra}
+        if taken is not None:
+            args["already_taken_this_month"] = taken
+        data = _parse_json(_call(evaluate_leave_scenario, args, trace))
+        name = _label(lt)
+        if data.get("can_take_extra"):
+            leftover = data.get("remaining_after_extra")
+            bits = [
+                f"Yes - you can take {extra:g} more day(s) of {name}.",
+                f"Official {data.get('leave_type')} available: {data.get('official_available')} day(s).",
+            ]
+            if taken is not None:
+                bits.append(
+                    f"After the {taken:g} day(s) you mentioned plus this extra {extra:g}, you would still have {leftover} day(s) left."
+                )
+            else:
+                bits.append(f"After this extra {extra:g} day(s) you would have {leftover} day(s) left.")
+            bits.extend(data.get("notes") or [])
+            bits.append("Apply in the HR portal (or with your manager) when you are ready.")
+            return {"answer": " ".join(str(b) for b in bits if b), "tool_trace": trace, "llm_provider": "local"}
 
-    if wants_balance or wants_elig or wants_calc:
-        raw = _call(get_leave_balance, {"leave_type": "ALL"}, trace)
-        sections.append("**Leave balance (HR database)**\n```json\n" + raw + "\n```")
+        blockers = data.get("blockers") or ["This extra leave is not allowed on current records."]
+        return {
+            "answer": "No - not based on current HR data. " + " ".join(blockers),
+            "tool_trace": trace,
+            "llm_provider": "local",
+        }
 
-    if wants_elig or "maternity" in q or "paternity" in q:
-        lt = _detect_leave_type(user_message)
-        raw = _call(check_leave_eligibility, {"leave_type": lt}, trace)
-        sections.append(f"**Eligibility ({lt})**\n```json\n" + raw + "\n```")
-
-    dates = _DATE.findall(user_message)
-    if wants_calc and dates:
+    if wants_calc:
+        dates = _DATE.findall(user_message)
         start = dates[0]
         end = dates[1] if len(dates) > 1 else dates[0]
-        lt = _detect_leave_type(user_message)
-        if lt not in {"PL", "SL", "CL"}:
-            lt = "PL"
-        raw = _call(
-            calculate_leave_days,
-            {"start_date": start, "end_date": end, "leave_type": lt, "half_day": "half" in q},
-            trace,
+        calc_lt = lt if lt in {"PL", "SL", "CL"} else "PL"
+        data = _parse_json(
+            _call(
+                calculate_leave_days,
+                {
+                    "start_date": start,
+                    "end_date": end,
+                    "leave_type": calc_lt,
+                    "half_day": "half" in q,
+                },
+                trace,
+            )
         )
-        sections.append("**Leave-day calculation**\n```json\n" + raw + "\n```")
+        days = data.get("working_days_to_deduct")
+        ok = data.get("sufficient_balance")
+        avail = data.get("available_balance")
+        verdict = "That fits your balance." if ok else "That would exceed your available balance."
+        answer = (
+            f"{days:g} working day(s) of {_label(calc_lt)} would be deducted "
+            f"({start} to {end}, weekends excluded). You have {avail} available. {verdict}"
+        )
+        return {"answer": answer, "tool_trace": trace, "llm_provider": "local"}
+
+    if wants_elig:
+        data = _parse_json(_call(check_leave_eligibility, {"leave_type": lt}, trace))
+        reasons = " ".join(data.get("reasons") or [])
+        if data.get("eligible"):
+            avail = data.get("available_balance")
+            extra = f" Available balance: {avail} day(s)." if avail is not None else ""
+            answer = f"Yes - you are eligible for {_label(lt)}.{extra} {reasons}".strip()
+        else:
+            answer = f"No - you are not eligible for {_label(lt)} right now. {reasons}".strip()
+        return {"answer": answer, "tool_trace": trace, "llm_provider": "local"}
+
+    if wants_balance:
+        data = _parse_json(_call(get_leave_balance, {"leave_type": "ALL"}, trace))
+        rows = data.get("balances") or []
+        if not rows:
+            msg = data.get("message") or "No leave balances on file."
+            return {"answer": msg, "tool_trace": trace, "llm_provider": "local"}
+        lines = ["Your current leave:"] + [_format_balance_line(r) for r in rows]
+        return {"answer": "\n".join(lines), "tool_trace": trace, "llm_provider": "local"}
 
     if wants_requests:
-        raw = _call(get_recent_leave_requests, {"limit": 5}, trace)
-        sections.append("**Recent leave requests**\n```json\n" + raw + "\n```")
+        data = _parse_json(_call(get_recent_leave_requests, {"limit": 5}, trace))
+        reqs = data.get("requests") or []
+        if not reqs:
+            return {"answer": "You have no leave requests on file.", "tool_trace": trace, "llm_provider": "local"}
+        lines = [
+            f"- {r['leave_type']} {r['start_date']} → {r['end_date']} ({r['days']:g} day(s), {r['status']})"
+            for r in reqs
+        ]
+        return {"answer": "Recent requests:\n" + "\n".join(lines), "tool_trace": trace, "llm_provider": "local"}
 
-    if wants_policy or not sections:
+    if wants_profile:
+        data = _parse_json(_call(get_employee_profile, {}, trace))
+        answer = (
+            f"You are {data.get('full_name')} ({data.get('employee_id')}), "
+            f"{data.get('role_title')} in {data.get('department')}, "
+            f"{data.get('employment_type')}, joined {data.get('join_date')}."
+        )
+        return {"answer": answer, "tool_trace": trace, "llm_provider": "local"}
+
+    if wants_policy or True:
         raw = _call(search_hr_policies, {"query": user_message}, trace)
-        sections.append("**Policy excerpts**\n" + raw)
-
-    answer = (
-        "Answer from HR tools (local free mode).\n\n"
-        + "\n\n".join(sections)
-        + "\n\n_Optional: add a free Groq key (`GROQ_API_KEY`) for natural-language LangGraph replies._"
-    )
-    return {"answer": answer, "tool_trace": trace, "llm_provider": "local"}
+        snippet = _policy_snippet(raw)
+        return {
+            "answer": f"{snippet} If you need this applied to your balance, ask something like: can I take one more sick leave?",
+            "tool_trace": trace,
+            "llm_provider": "local",
+        }

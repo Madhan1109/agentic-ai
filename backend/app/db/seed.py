@@ -15,12 +15,12 @@ DEMO_PASSWORD = "Password@123"
 EMPLOYEES = [
     {
         "employee_id": "E1001",
-        "email": "alice.nguyen@acmecorp.example",
+        "email": "alice.nguyen@12icorp.example",
         "full_name": "Alice Nguyen",
         "department": "Engineering",
         "employment_type": "full-time",
         "role_title": "Senior Software Engineer",
-        "manager_email": "priya.sharma@acmecorp.example",
+        "manager_email": "priya.sharma@12icorp.example",
         "join_date": date(2022, 3, 15),
         "location": "Austin, TX",
         "balances": [
@@ -41,12 +41,12 @@ EMPLOYEES = [
     },
     {
         "employee_id": "E1002",
-        "email": "bob.martinez@acmecorp.example",
+        "email": "bob.martinez@12icorp.example",
         "full_name": "Bob Martinez",
         "department": "People Operations",
         "employment_type": "full-time",
         "role_title": "HR Business Partner",
-        "manager_email": "chen.wei@acmecorp.example",
+        "manager_email": "chen.wei@12icorp.example",
         "join_date": date(2020, 7, 1),
         "location": "Chicago, IL",
         "balances": [
@@ -58,12 +58,12 @@ EMPLOYEES = [
     },
     {
         "employee_id": "E1003",
-        "email": "cara.lee@acmecorp.example",
+        "email": "cara.lee@12icorp.example",
         "full_name": "Cara Lee",
         "department": "Marketing",
         "employment_type": "full-time",
         "role_title": "Marketing Specialist",
-        "manager_email": "dana.kim@acmecorp.example",
+        "manager_email": "dana.kim@12icorp.example",
         "join_date": date(2026, 8, 1),  # still in probation as of assessment date context
         "location": "New York, NY",
         "balances": [
@@ -75,12 +75,12 @@ EMPLOYEES = [
     },
     {
         "employee_id": "E2001",
-        "email": "devon.contractor@acmecorp.example",
+        "email": "devon.contractor@12icorp.example",
         "full_name": "Devon Brooks",
         "department": "Engineering",
         "employment_type": "contractor",
         "role_title": "Contract Developer",
-        "manager_email": "priya.sharma@acmecorp.example",
+        "manager_email": "priya.sharma@12icorp.example",
         "join_date": date(2025, 11, 1),
         "location": "Remote",
         "balances": [],

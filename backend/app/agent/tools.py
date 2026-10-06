@@ -219,6 +219,92 @@ def calculate_leave_days(
 
 
 @tool
+def evaluate_leave_scenario(
+    leave_type: Annotated[str, "Leave type for the extra day(s): PL, SL, or CL"],
+    extra_days: Annotated[float, "Additional days the employee wants to take"] = 1.0,
+    already_taken_this_month: Annotated[
+        float | None,
+        "Days the employee says they already took this month, if mentioned. Use null if unknown.",
+    ] = None,
+) -> str:
+    """Check whether the employee can take extra leave given official balances, what they say they already took, and policy (e.g. medical certificate for 3+ consecutive sick days)."""
+    lt = leave_type.upper().strip()
+    extra = float(extra_days)
+    with _session() as session:
+        emp = _require_employee(session)
+        tenure_days = (date.today() - emp.join_date).days
+        bal = (
+            session.query(LeaveBalance)
+            .filter(
+                LeaveBalance.employee_pk == emp.id,
+                LeaveBalance.year == date.today().year,
+                LeaveBalance.leave_type == lt,
+            )
+            .first()
+        )
+        official_used = bal.used if bal else 0.0
+        official_available = bal.available if bal else 0.0
+        entitled = bal.entitled if bal else 0.0
+        pending = bal.pending if bal else 0.0
+        carried = bal.carried_forward if bal else 0.0
+
+        stated = already_taken_this_month
+        if stated is None:
+            remaining_if_extra = round(official_available - extra, 2)
+            used_for_decision = official_used
+        else:
+            stated = float(stated)
+            used_for_decision = max(official_used, stated)
+            remaining_if_extra = round(entitled + carried - used_for_decision - pending - extra, 2)
+
+        eligible = True
+        blockers: list[str] = []
+        notes: list[str] = []
+
+        if emp.employment_type == "contractor":
+            eligible = False
+            blockers.append("Contractors do not receive company sick/privilege/casual leave.")
+        elif lt in {"PL", "CL"} and tenure_days < 90:
+            eligible = False
+            blockers.append("Privilege/casual leave is generally not usable during the first 90 days.")
+        elif not bal:
+            eligible = False
+            blockers.append(f"No {lt} balance on file.")
+        elif remaining_if_extra < 0:
+            eligible = False
+            blockers.append(
+                f"Not enough {lt} balance. Official available is {official_available} day(s); "
+                f"this extra {extra} day(s) would go over."
+            )
+
+        if lt == "SL" and extra >= 3:
+            notes.append("A medical certificate is required for 3 or more consecutive sick days.")
+        elif lt == "SL":
+            notes.append("No medical certificate is required for fewer than 3 consecutive sick days.")
+
+        if lt == "CL" and extra > 2:
+            notes.append("Casual leave over 2 consecutive days needs manager approval beyond the usual check.")
+
+        can_take = eligible and remaining_if_extra >= 0
+        return json.dumps(
+            {
+                "employee_id": emp.employee_id,
+                "leave_type": lt,
+                "can_take_extra": can_take,
+                "extra_days_requested": extra,
+                "already_taken_stated": already_taken_this_month,
+                "official_used": official_used,
+                "official_available": official_available,
+                "remaining_after_extra": max(remaining_if_extra, 0) if remaining_if_extra >= 0 else remaining_if_extra,
+                "used_for_decision": used_for_decision,
+                "blockers": blockers,
+                "notes": notes,
+            },
+            indent=2,
+        )
+
+
+@tool
 def get_recent_leave_requests(
     limit: Annotated[int, "Max number of recent requests to return"] = 5,
 ) -> str:
@@ -252,5 +338,6 @@ HR_TOOLS = [
     get_leave_balance,
     check_leave_eligibility,
     calculate_leave_days,
+    evaluate_leave_scenario,
     get_recent_leave_requests,
 ]
