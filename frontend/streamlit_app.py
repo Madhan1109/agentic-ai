@@ -154,6 +154,15 @@ def render_trace(trace: list[dict]) -> None:
                 st.code(step.get("output") or "", language="json")
 
 
+def sign_out() -> None:
+    st.session_state.token = None
+    st.session_state.user = None
+    st.session_state.chat_log = []
+    for key in ("login_id", "login_password"):
+        if key in st.session_state:
+            del st.session_state[key]
+
+
 if "token" not in st.session_state:
     st.session_state.token = None
 if "user" not in st.session_state:
@@ -174,28 +183,32 @@ st.markdown(
 
 with st.sidebar:
     st.markdown("### Sign in")
-    st.caption("Work email or employee ID. Password is the seeded account password.")
+    st.caption("Use employee ID (E1001) or work email, then password.")
     if st.session_state.token:
         u = st.session_state.user
         st.markdown(f"**{u['full_name']}**")
         st.write(f"{u['employee_id']} · {u['department']}")
         st.write(u["email"])
-        if st.button("Sign out", use_container_width=True):
-            st.session_state.token = None
-            st.session_state.user = None
-            st.session_state.chat_log = []
+        if st.button("Sign out", key="sign_out_btn", use_container_width=True):
+            sign_out()
             st.rerun()
     else:
-        email = st.text_input("Email or employee ID", key="login_id", placeholder="E1001")
-        password = st.text_input("Password", type="password", key="login_password")
-        if st.button("Continue", type="primary", use_container_width=True):
-            try:
-                data = api_login(email.replace("＠", "@").strip(), password)
-                st.session_state.token = data["access_token"]
-                st.session_state.user = data
-                st.rerun()
-            except Exception as exc:  # noqa: BLE001
-                st.error(str(exc))
+        with st.form("login_form"):
+            login = st.text_input("Email or employee ID", placeholder="E1001")
+            password = st.text_input("Password", type="password")
+            submitted = st.form_submit_button("Continue", type="primary", use_container_width=True)
+        if submitted:
+            login = (login or "").replace("＠", "@").strip()
+            if not login or not password:
+                st.error("Enter employee ID (for example E1001) and password, then Continue.")
+            else:
+                try:
+                    data = api_login(login, password)
+                    st.session_state.token = data["access_token"]
+                    st.session_state.user = data
+                    st.rerun()
+                except Exception as exc:  # noqa: BLE001
+                    st.error(str(exc))
 
     st.divider()
     st.markdown("### You can ask")
