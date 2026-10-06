@@ -111,7 +111,16 @@ def api_login(email: str, password: str) -> dict[str, Any]:
     with httpx.Client(timeout=30.0) as client:
         r = client.post(f"{API_BASE}/auth/login", json={"email": email, "password": password})
         if r.status_code != 200:
-            raise RuntimeError(r.json().get("detail", r.text))
+            try:
+                payload = r.json()
+                detail = payload.get("detail", payload)
+                if isinstance(detail, list):
+                    detail = "; ".join(
+                        str(item.get("msg", item)) if isinstance(item, dict) else str(item) for item in detail
+                    )
+            except Exception:
+                detail = r.text
+            raise RuntimeError(detail)
         return r.json()
 
 
