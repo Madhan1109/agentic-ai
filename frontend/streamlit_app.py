@@ -42,9 +42,16 @@ BASE_CSS = """
     font-family: 'Inter', 'Segoe UI', sans-serif !important;
   }
 
-  /* Hide deploy chrome but keep sidebar toggle usable */
+  /* Hide Streamlit top header strip + deploy chrome */
+  header[data-testid="stHeader"] {
+    background: transparent !important;
+    height: 0 !important;
+    min-height: 0 !important;
+  }
+  header[data-testid="stHeader"] * { display: none !important; }
   [data-testid="stToolbar"], [data-testid="stDecoration"], [data-testid="stStatusWidget"],
   .stDeployButton, #MainMenu, footer { display: none !important; visibility: hidden !important; }
+  .stApp > header { display: none !important; }
 
   .stApp { background: #e8eef8 !important; color: #1e3a5f; }
 
@@ -222,6 +229,10 @@ APP_CSS = """
     background: linear-gradient(180deg, #0b4f9c 0%, #1565c0 55%, #1a73c7 100%) !important;
     border-right: 1px solid rgba(255, 255, 255, 0.14);
   }
+  section[data-testid="stSidebar"] > div {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
   section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
   section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h2,
   section[data-testid="stSidebar"] .stCaption,
@@ -235,38 +246,24 @@ APP_CSS = """
     border-radius: 12px !important;
     box-shadow: none !important;
   }
-  section[data-testid="stSidebar"] .stButton>button[kind="primary"],
-  section[data-testid="stSidebar"] .stButton>button[data-testid="baseButton-primary"] {
-    background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%) !important;
-    border: 0 !important;
-    color: #ffffff !important;
-  }
 
   .side-brand {
+    width: 100%;
+    box-sizing: border-box;
     background: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.22);
-    border-radius: 16px;
-    padding: 0.85rem 0.8rem 0.95rem;
-    margin-bottom: 0.9rem;
-    text-align: center;
+    border-radius: 14px;
+    padding: 0.55rem 0.65rem;
+    margin: 0 0 0.85rem 0;
+    text-align: left;
   }
   .side-brand img {
-    width: 100%;
-    max-width: 170px;
-    border-radius: 12px;
+    width: 92px;
+    max-width: 40%;
+    height: auto;
+    border-radius: 10px;
     display: block;
-    margin: 0 auto 0.55rem;
-  }
-  .side-brand h2 {
     margin: 0;
-    font-size: 1.02rem;
-    color: #ffffff !important;
-    font-weight: 700;
-  }
-  .side-brand .tag {
-    margin: 0.15rem 0 0;
-    font-size: 0.76rem;
-    color: #d7ebff !important;
   }
   .side-section-title {
     margin: 0.8rem 0 0.45rem;
@@ -382,11 +379,6 @@ def sign_out() -> None:
     st.session_state.session_tools = []
 
 
-def new_chat() -> None:
-    st.session_state.chat_log = []
-    st.session_state.session_tools = []
-
-
 if "token" not in st.session_state:
     st.session_state.token = None
 if "user" not in st.session_state:
@@ -442,16 +434,10 @@ with st.sidebar:
         f"""
         <div class="side-brand">
           <img src="{LOGO_URI}" alt="Ideas2IT" />
-          <h2>Ideas2IT</h2>
-          <p class="tag">HR Chat Agent</p>
         </div>
         """,
         unsafe_allow_html=True,
     )
-
-    if st.button("New chat", key="new_chat_btn", type="primary", use_container_width=True):
-        new_chat()
-        st.rerun()
 
     st.markdown('<p class="side-section-title">Try asking</p>', unsafe_allow_html=True)
     eid = u.get("employee_id")
