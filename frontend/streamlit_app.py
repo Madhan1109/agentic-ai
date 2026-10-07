@@ -42,15 +42,11 @@ BASE_CSS = """
     font-family: 'Inter', 'Segoe UI', sans-serif !important;
   }
 
-  header[data-testid="stHeader"] { background: transparent !important; height: 0 !important; }
-  header[data-testid="stHeader"] * { display: none !important; }
+  /* Hide deploy chrome but keep sidebar toggle usable */
   [data-testid="stToolbar"], [data-testid="stDecoration"], [data-testid="stStatusWidget"],
   .stDeployButton, #MainMenu, footer { display: none !important; visibility: hidden !important; }
 
-  .stApp {
-    background: #e8eef8 !important;
-    color: #1e3a5f;
-  }
+  .stApp { background: #e8eef8 !important; color: #1e3a5f; }
 
   [data-testid="stChatMessage"] {
     background: #ffffff !important;
@@ -63,9 +59,7 @@ BASE_CSS = """
   }
   [data-testid="stChatMessage"] p,
   [data-testid="stChatMessage"] span,
-  [data-testid="stChatMessage"] li {
-    color: #1e3a5f !important;
-  }
+  [data-testid="stChatMessage"] li { color: #1e3a5f !important; }
 
   .stButton>button {
     background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%) !important;
@@ -76,7 +70,6 @@ BASE_CSS = """
     box-shadow: 0 8px 18px rgba(37, 99, 235, 0.28);
     min-height: 2.5rem;
   }
-  .stButton>button:hover { filter: brightness(1.05); }
 
   .stTextInput input, .stTextInput input:focus {
     background: #ffffff !important;
@@ -96,104 +89,93 @@ BASE_CSS = """
 
 LOGIN_CSS = """
 <style>
-  [data-testid="stSidebar"] { display: none !important; }
+  [data-testid="stSidebar"] { display: none !important; visibility: hidden !important; }
+  [data-testid="collapsedControl"] { display: none !important; }
 
-  html, body, .stApp {
-    height: 100vh !important;
-    min-height: 100vh !important;
-    overflow: hidden !important;
-  }
   .stApp {
     background: linear-gradient(145deg, #0b4f9c 0%, #1565c0 42%, #1e88e5 100%) !important;
+    min-height: 100vh !important;
   }
   [data-testid="stAppViewContainer"],
   [data-testid="stAppViewContainer"] > .main,
   section.main {
-    height: 100vh !important;
     background: transparent !important;
+    min-height: 100vh !important;
   }
-  section.main > div {
-    height: 100vh !important;
-    padding-top: 0 !important;
-    overflow: hidden !important;
-  }
+  section.main > div { min-height: 100vh !important; }
   .block-container {
-    max-width: 460px !important;
-    height: 100vh !important;
-    padding: 0.75rem 1rem !important;
+    max-width: 440px !important;
+    min-height: 100vh !important;
+    padding: 1.5rem 1rem !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
-    overflow: hidden !important;
   }
 
   [data-testid="stForm"] {
     background: #ffffff !important;
     border: 1px solid #d7e3f4 !important;
     border-radius: 22px !important;
-    padding: 1.1rem 1.15rem 0.95rem !important;
+    padding: 1rem 1.1rem 0.9rem !important;
     box-shadow: 0 22px 48px rgba(11, 79, 156, 0.28) !important;
-    max-height: calc(100vh - 1.5rem) !important;
-    overflow-y: auto !important;
   }
 
   .login-brand { text-align: center; }
   .login-brand img {
-    width: min(100%, 168px);
-    border-radius: 14px;
-    margin: 0 auto 0.65rem;
+    width: 120px;
+    height: auto;
+    border-radius: 12px;
+    margin: 0 auto 0.55rem;
     display: block;
   }
   .login-brand h1 {
     margin: 0;
-    font-size: 1.45rem;
+    font-size: 1.35rem;
     color: #111827 !important;
     font-weight: 700;
   }
   .login-brand p {
-    margin: 0.4rem auto 0;
+    margin: 0.35rem auto 0;
     max-width: 340px;
     color: #111827 !important;
-    font-size: 0.88rem;
-    line-height: 1.45;
+    font-size: 0.86rem;
+    line-height: 1.4;
   }
   .login-chip {
     display: inline-block;
-    margin-top: 0.65rem;
-    margin-bottom: 0.85rem;
-    padding: 0.28rem 0.7rem;
+    margin-top: 0.55rem;
+    margin-bottom: 0.75rem;
+    padding: 0.25rem 0.65rem;
     border-radius: 999px;
     background: #e8f1ff;
     border: 1px solid #c7dbf7;
     color: #111827 !important;
-    font-size: 0.74rem;
+    font-size: 0.72rem;
     font-weight: 600;
   }
 
   [data-testid="stForm"] label,
   [data-testid="stForm"] label p,
   [data-testid="stForm"] label span,
-  [data-testid="stForm"] [data-testid="stWidgetLabel"] *,
-  [data-testid="stForm"] p {
+  [data-testid="stForm"] [data-testid="stWidgetLabel"] * {
     color: #111827 !important;
   }
 
-  /* Match email + password field widths; keep eye overlay inside password */
-  [data-testid="stForm"] .stTextInput,
-  [data-testid="stForm"] [data-testid="stTextInputRootElement"],
+  [data-testid="stForm"] .stTextInput { width: 100% !important; }
+  [data-testid="stForm"] [data-testid="stTextInputRootElement"] {
+    position: relative !important;
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    align-items: center !important;
+  }
+  [data-testid="stForm"] [data-testid="stTextInputRootElement"] > div,
   [data-testid="stForm"] [data-baseweb="base-input"],
   [data-testid="stForm"] [data-baseweb="input"] {
     width: 100% !important;
     max-width: 100% !important;
-  }
-  [data-testid="stForm"] [data-testid="stTextInputRootElement"] {
-    position: relative !important;
-    display: block !important;
-  }
-  [data-testid="stForm"] [data-baseweb="input"] {
-    position: relative !important;
-    background: #ffffff !important;
-    border-radius: 12px !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
   }
   [data-testid="stForm"] [data-baseweb="input"] input {
     width: 100% !important;
@@ -202,29 +184,24 @@ LOGIN_CSS = """
     box-sizing: border-box !important;
   }
   [data-testid="stForm"] [data-testid="stTextInputRootElement"] button {
-    position: absolute !important;
-    right: 0.4rem !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+    align-self: center !important;
     width: 2rem !important;
     min-width: 2rem !important;
     height: 2rem !important;
     min-height: 2rem !important;
-    margin: 0 !important;
+    margin: 0 0.35rem 0 0 !important;
     padding: 0 !important;
     border: 0 !important;
-    border-radius: 8px !important;
     background: transparent !important;
     box-shadow: none !important;
     color: #4b5563 !important;
     z-index: 3 !important;
   }
-  [data-testid="stForm"] [data-testid="stTextInputRootElement"] button svg {
-    fill: #4b5563 !important;
-  }
 
-  .stCaption, [data-testid="stCaptionContainer"],
-  .stCaption p, [data-testid="stCaptionContainer"] p {
+  .stCaption, [data-testid="stCaptionContainer"] p {
     color: #e8f1ff !important;
     text-align: center;
   }
@@ -234,48 +211,35 @@ LOGIN_CSS = """
 APP_CSS = """
 <style>
   .stApp { background: #e8eef8 !important; }
-  [data-testid="stAppViewContainer"] > .main,
-  section.main {
-    background: #e8eef8 !important;
-  }
+  section.main { background: #e8eef8 !important; }
   .block-container {
     max-width: 920px !important;
     padding-top: 1.25rem !important;
     padding-bottom: 5.5rem !important;
   }
 
-  [data-testid="stSidebar"] {
+  section[data-testid="stSidebar"] {
     background: linear-gradient(180deg, #0b4f9c 0%, #1565c0 55%, #1a73c7 100%) !important;
     border-right: 1px solid rgba(255, 255, 255, 0.14);
-    min-width: 17rem !important;
   }
-  [data-testid="stSidebar"] > div:first-child {
-    padding-top: 1rem;
-    display: flex !important;
-    flex-direction: column !important;
-    min-height: 100vh !important;
+  section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
+  section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h2,
+  section[data-testid="stSidebar"] .stCaption,
+  section[data-testid="stSidebar"] label {
+    color: #eef6ff !important;
   }
-  [data-testid="stSidebarUserContent"] {
-    display: flex !important;
-    flex-direction: column !important;
-    min-height: calc(100vh - 2rem) !important;
-  }
-  [data-testid="stSidebar"] * { color: #eef6ff !important; }
-  [data-testid="stSidebar"] .stCaption,
-  [data-testid="stSidebar"] p,
-  [data-testid="stSidebar"] small { color: #d0e4ff !important; }
-  [data-testid="stSidebar"] .stButton>button {
-    background: rgba(255, 255, 255, 0.10) !important;
-    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  section[data-testid="stSidebar"] .stButton>button {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
     color: #ffffff !important;
     border-radius: 12px !important;
     box-shadow: none !important;
   }
-  [data-testid="stSidebar"] .stButton>button[kind="primary"],
-  [data-testid="stSidebar"] .stButton>button[data-testid="baseButton-primary"] {
+  section[data-testid="stSidebar"] .stButton>button[kind="primary"],
+  section[data-testid="stSidebar"] .stButton>button[data-testid="baseButton-primary"] {
     background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%) !important;
     border: 0 !important;
-    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.3) !important;
+    color: #ffffff !important;
   }
 
   .side-brand {
@@ -284,51 +248,25 @@ APP_CSS = """
     border-radius: 16px;
     padding: 0.85rem 0.8rem 0.95rem;
     margin-bottom: 0.9rem;
+    text-align: center;
   }
   .side-brand img {
     width: 100%;
-    max-width: 180px;
+    max-width: 170px;
     border-radius: 12px;
     display: block;
-    margin: 0 auto 0.6rem;
+    margin: 0 auto 0.55rem;
   }
   .side-brand h2 {
     margin: 0;
     font-size: 1.02rem;
     color: #ffffff !important;
     font-weight: 700;
-    text-align: center;
   }
   .side-brand .tag {
     margin: 0.15rem 0 0;
     font-size: 0.76rem;
     color: #d7ebff !important;
-    text-align: center;
-  }
-  .sidebar-spacer {
-    flex: 1 1 auto;
-    min-height: 3rem;
-  }
-  .side-user-hint {
-    margin: 0.4rem 0 0.35rem;
-    font-size: 0.72rem;
-    color: #d0e4ff !important;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    font-weight: 600;
-  }
-  /* Keep account controls pinned near sidebar bottom */
-  [data-testid="stSidebar"] [data-testid="stPopover"] {
-    width: 100% !important;
-  }
-  [data-testid="stSidebar"] [data-testid="stPopover"] > button,
-  [data-testid="stSidebar"] [data-testid="stPopoverButton"] {
-    width: 100% !important;
-    background: rgba(255, 255, 255, 0.12) !important;
-    border: 1px solid rgba(255, 255, 255, 0.24) !important;
-    color: #ffffff !important;
-    border-radius: 12px !important;
-    justify-content: flex-start !important;
   }
   .side-section-title {
     margin: 0.8rem 0 0.45rem;
@@ -346,6 +284,15 @@ APP_CSS = """
     color: #eef6ff !important;
     font-size: 0.82rem;
     line-height: 1.45;
+    margin-bottom: 1rem;
+  }
+  .side-user-hint {
+    margin: 1.2rem 0 0.35rem;
+    font-size: 0.72rem;
+    color: #d0e4ff !important;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-weight: 600;
   }
 
   .hero-card {
@@ -448,6 +395,7 @@ if "chat_log" not in st.session_state:
     st.session_state.chat_log = []
 if "session_tools" not in st.session_state:
     st.session_state.session_tools = []
+
 st.markdown(BASE_CSS, unsafe_allow_html=True)
 
 # ---------- LOGIN PAGE ----------
@@ -526,10 +474,7 @@ with st.sidebar:
         st.markdown('<p class="side-section-title">Tools this session</p>', unsafe_allow_html=True)
         st.caption(", ".join(tools[-10:]))
 
-    # Push account menu to sidebar bottom-left; Sign out only after opening the name
-    st.markdown('<div class="sidebar-spacer"></div>', unsafe_allow_html=True)
     st.markdown('<p class="side-user-hint">Account</p>', unsafe_allow_html=True)
-
     full_name = (u.get("full_name") or "User").strip()
     short_name = full_name.split()[0] if full_name else "User"
     with st.popover(f"👤 {short_name}", use_container_width=True):
@@ -540,7 +485,6 @@ with st.sidebar:
             sign_out()
             st.rerun()
 
-# Single closed HTML card — do not open/close wrappers across Streamlit widgets
 st.markdown(
     """
     <div class="hero-card">
