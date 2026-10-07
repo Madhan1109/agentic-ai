@@ -51,16 +51,15 @@ BASE_CSS = """
     background: #e8eef8 !important;
     color: #1e3a5f;
   }
-  .stApp p, .stApp span, .stApp label, .stApp li { color: #334155 !important; }
 
   [data-testid="stChatMessage"] {
     background: #ffffff !important;
     color: #1e3a5f !important;
     border: 1px solid #d7e3f4;
-    border-radius: 16px;
-    padding: 0.85rem 1rem;
-    box-shadow: 0 10px 28px rgba(30, 77, 123, 0.08);
-    margin-bottom: 0.65rem;
+    border-radius: 14px;
+    padding: 0.75rem 0.9rem;
+    box-shadow: 0 8px 20px rgba(30, 77, 123, 0.06);
+    margin-bottom: 0.55rem;
   }
   [data-testid="stChatMessage"] p,
   [data-testid="stChatMessage"] span,
@@ -75,24 +74,21 @@ BASE_CSS = """
     border-radius: 12px !important;
     font-weight: 600 !important;
     box-shadow: 0 8px 18px rgba(37, 99, 235, 0.28);
-    min-height: 2.6rem;
+    min-height: 2.5rem;
   }
   .stButton>button:hover { filter: brightness(1.05); }
 
   .stTextInput input, .stTextInput input:focus {
     background: #ffffff !important;
-    color: #1e3a5f !important;
+    color: #111827 !important;
     border: 1px solid #c5d4ea !important;
     border-radius: 12px !important;
   }
 
-  [data-testid="stChatInput"] {
-    background: transparent !important;
-  }
   [data-testid="stChatInput"] textarea {
-    border-radius: 16px !important;
+    border-radius: 14px !important;
     border: 1px solid #c5d4ea !important;
-    box-shadow: 0 10px 24px rgba(30, 77, 123, 0.08);
+    box-shadow: 0 8px 18px rgba(30, 77, 123, 0.06);
     background: #ffffff !important;
   }
 </style>
@@ -114,91 +110,128 @@ LOGIN_CSS = """
   [data-testid="stAppViewContainer"] > .main,
   section.main {
     height: 100vh !important;
-    min-height: 100vh !important;
     background: transparent !important;
   }
   section.main > div {
     height: 100vh !important;
     padding-top: 0 !important;
+    overflow: hidden !important;
   }
   .block-container {
-    max-width: 520px !important;
-    min-height: 100vh !important;
+    max-width: 460px !important;
     height: 100vh !important;
-    padding: 0 1.25rem !important;
+    padding: 0.75rem 1rem !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
+    overflow: hidden !important;
   }
+
   [data-testid="stForm"] {
-    background: rgba(255, 255, 255, 0.14) !important;
-    border: 1px solid rgba(255, 255, 255, 0.30) !important;
-    border-radius: 28px !important;
-    padding: 1.6rem 1.45rem 1.25rem !important;
-    box-shadow: 0 28px 60px rgba(11, 79, 156, 0.35) !important;
-    backdrop-filter: blur(10px);
+    background: #ffffff !important;
+    border: 1px solid #d7e3f4 !important;
+    border-radius: 22px !important;
+    padding: 1.1rem 1.15rem 0.95rem !important;
+    box-shadow: 0 22px 48px rgba(11, 79, 156, 0.28) !important;
+    max-height: calc(100vh - 1.5rem) !important;
+    overflow-y: auto !important;
   }
-  .login-brand {
-    text-align: center;
-    margin-bottom: 0.35rem;
-  }
+
+  .login-brand { text-align: center; }
   .login-brand img {
-    width: min(100%, 280px);
-    border-radius: 18px;
-    margin: 0 auto 1rem;
+    width: min(100%, 168px);
+    border-radius: 14px;
+    margin: 0 auto 0.65rem;
     display: block;
-    box-shadow: 0 12px 28px rgba(11, 79, 156, 0.25);
   }
   .login-brand h1 {
     margin: 0;
-    font-size: 1.75rem;
-    color: #ffffff !important;
+    font-size: 1.45rem;
+    color: #111827 !important;
     font-weight: 700;
-    letter-spacing: -0.02em;
   }
   .login-brand p {
-    margin: 0.55rem auto 0;
-    max-width: 360px;
-    color: #e3f2fd !important;
-    font-size: 0.95rem;
-    line-height: 1.5;
+    margin: 0.4rem auto 0;
+    max-width: 340px;
+    color: #111827 !important;
+    font-size: 0.88rem;
+    line-height: 1.45;
   }
   .login-chip {
     display: inline-block;
-    margin-top: 0.9rem;
-    padding: 0.3rem 0.75rem;
+    margin-top: 0.65rem;
+    padding: 0.28rem 0.7rem;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.18);
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    color: #ffffff !important;
-    font-size: 0.75rem;
+    background: #e8f1ff;
+    border: 1px solid #c7dbf7;
+    color: #111827 !important;
+    font-size: 0.74rem;
     font-weight: 600;
   }
   .login-title h2 {
-    margin: 0.9rem 0 0.25rem;
-    color: #ffffff !important;
-    font-size: 1.2rem;
+    margin: 0.75rem 0 0.2rem;
+    color: #111827 !important;
+    font-size: 1.1rem;
     font-weight: 700;
     text-align: center;
   }
   .login-title p {
-    margin: 0 0 0.85rem;
-    color: #e3f2fd !important;
-    font-size: 0.9rem;
+    margin: 0 0 0.7rem;
+    color: #111827 !important;
+    font-size: 0.88rem;
     text-align: center;
   }
+
   [data-testid="stForm"] label,
-  [data-testid="stForm"] p,
-  [data-testid="stForm"] span {
-    color: #e8f3ff !important;
+  [data-testid="stForm"] label p,
+  [data-testid="stForm"] label span,
+  [data-testid="stForm"] [data-testid="stWidgetLabel"] *,
+  [data-testid="stForm"] p {
+    color: #111827 !important;
   }
-  [data-testid="stForm"] .stTextInput input {
+
+  /* Keep password eye toggle inside the input */
+  [data-testid="stForm"] [data-testid="stTextInputRootElement"] {
+    position: relative !important;
+  }
+  [data-testid="stForm"] [data-baseweb="input"] {
+    position: relative !important;
     background: #ffffff !important;
-    color: #1e3a5f !important;
-    border: 1px solid #b7d0ef !important;
+    border-radius: 12px !important;
   }
-  .stCaption, [data-testid="stCaptionContainer"] {
-    color: #dbeafe !important;
+  [data-testid="stForm"] [data-baseweb="input"] input {
+    padding-right: 2.6rem !important;
+    color: #111827 !important;
+  }
+  [data-testid="stForm"] [data-testid="stTextInputRootElement"] button,
+  [data-testid="stForm"] [data-baseweb="input"] button,
+  [data-testid="stForm"] button[kind="secondary"],
+  [data-testid="stForm"] button[data-testid="baseButton-secondary"] {
+    position: absolute !important;
+    right: 0.35rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 2rem !important;
+    min-width: 2rem !important;
+    height: 2rem !important;
+    min-height: 2rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #4b5563 !important;
+    z-index: 3 !important;
+  }
+  [data-testid="stForm"] [data-testid="stTextInputRootElement"] button svg,
+  [data-testid="stForm"] [data-baseweb="input"] button svg {
+    fill: #4b5563 !important;
+  }
+
+  .stCaption, [data-testid="stCaptionContainer"],
+  .stCaption p, [data-testid="stCaptionContainer"] p {
+    color: #e8f1ff !important;
     text-align: center;
   }
 </style>
@@ -206,91 +239,64 @@ LOGIN_CSS = """
 
 APP_CSS = """
 <style>
-  html, body, .stApp {
-    min-height: 100vh !important;
-  }
-  .stApp {
-    background: #e8eef8 !important;
-  }
-  [data-testid="stAppViewContainer"],
+  .stApp { background: #e8eef8 !important; }
   [data-testid="stAppViewContainer"] > .main,
   section.main {
-    min-height: 100vh !important;
     background: #e8eef8 !important;
   }
-  section.main > div {
-    min-height: 100vh !important;
-    padding-top: 0 !important;
-  }
   .block-container {
-    max-width: 1100px !important;
-    min-height: calc(100vh - 1rem) !important;
+    max-width: 920px !important;
     padding-top: 1.25rem !important;
-    padding-bottom: 6.5rem !important;
+    padding-bottom: 5.5rem !important;
   }
 
   [data-testid="stSidebar"] {
     background: linear-gradient(180deg, #0b4f9c 0%, #1565c0 55%, #1a73c7 100%) !important;
     border-right: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: 8px 0 28px rgba(11, 79, 156, 0.22);
   }
-  [data-testid="stSidebar"] > div:first-child {
-    padding-top: 1rem;
-    min-height: 100vh;
-  }
+  [data-testid="stSidebar"] > div:first-child { padding-top: 1rem; }
   [data-testid="stSidebar"] * { color: #eef6ff !important; }
   [data-testid="stSidebar"] .stCaption,
   [data-testid="stSidebar"] p,
-  [data-testid="stSidebar"] small {
-    color: #d0e4ff !important;
-  }
-  [data-testid="stSidebar"] hr {
-    border-color: rgba(255, 255, 255, 0.18) !important;
-  }
+  [data-testid="stSidebar"] small { color: #d0e4ff !important; }
   [data-testid="stSidebar"] .stButton>button {
     background: rgba(255, 255, 255, 0.10) !important;
     border: 1px solid rgba(255, 255, 255, 0.22) !important;
     color: #ffffff !important;
     border-radius: 12px !important;
     box-shadow: none !important;
-    font-weight: 500 !important;
-  }
-  [data-testid="stSidebar"] .stButton>button:hover {
-    background: rgba(255, 255, 255, 0.18) !important;
   }
   [data-testid="stSidebar"] .stButton>button[kind="primary"],
   [data-testid="stSidebar"] .stButton>button[data-testid="baseButton-primary"] {
     background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%) !important;
     border: 0 !important;
-    color: #ffffff !important;
-    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.35) !important;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.3) !important;
   }
 
   .side-brand {
     background: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.22);
-    border-radius: 18px;
-    padding: 0.9rem 0.85rem 1rem;
-    margin-bottom: 0.95rem;
-    box-shadow: 0 10px 24px rgba(11, 79, 156, 0.18);
+    border-radius: 16px;
+    padding: 0.85rem 0.8rem 0.95rem;
+    margin-bottom: 0.9rem;
   }
   .side-brand img {
     width: 100%;
-    max-width: 220px;
+    max-width: 180px;
     border-radius: 12px;
     display: block;
-    margin: 0 auto 0.7rem;
+    margin: 0 auto 0.6rem;
   }
   .side-brand h2 {
     margin: 0;
-    font-size: 1.05rem;
+    font-size: 1.02rem;
     color: #ffffff !important;
     font-weight: 700;
     text-align: center;
   }
   .side-brand .tag {
-    margin: 0.2rem 0 0.75rem;
-    font-size: 0.78rem;
+    margin: 0.15rem 0 0.65rem;
+    font-size: 0.76rem;
     color: #d7ebff !important;
     text-align: center;
   }
@@ -298,18 +304,17 @@ APP_CSS = """
     margin: 0;
     color: #ffffff !important;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     text-align: center;
   }
   .side-brand .user-meta {
-    margin: 0.2rem 0 0;
+    margin: 0.18rem 0 0;
     color: #d0e4ff !important;
-    font-size: 0.76rem;
+    font-size: 0.74rem;
     text-align: center;
   }
-
   .side-section-title {
-    margin: 0.85rem 0 0.5rem;
+    margin: 0.8rem 0 0.45rem;
     color: #d7ebff !important;
     font-size: 0.72rem;
     font-weight: 700;
@@ -319,43 +324,40 @@ APP_CSS = """
   .side-tips {
     background: rgba(255, 255, 255, 0.10);
     border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 14px;
-    padding: 0.75rem 0.85rem;
-    margin-bottom: 0.8rem;
+    border-radius: 12px;
+    padding: 0.7rem 0.8rem;
     color: #eef6ff !important;
-    font-size: 0.84rem;
+    font-size: 0.82rem;
     line-height: 1.45;
   }
 
-  .chat-shell {
+  .hero-card {
     background: #ffffff;
     border: 1px solid #d7e3f4;
-    border-radius: 22px;
-    padding: 1.25rem 1.35rem 1.1rem;
-    min-height: calc(100vh - 7.5rem);
-    box-shadow: 0 16px 40px rgba(30, 77, 123, 0.08);
+    border-radius: 16px;
+    padding: 1rem 1.15rem;
+    margin-bottom: 0.9rem;
+    box-shadow: 0 10px 24px rgba(30, 77, 123, 0.07);
   }
-  .chat-shell h1 {
+  .hero-card h1 {
     margin: 0;
-    font-size: 1.55rem;
+    font-size: 1.4rem;
     color: #0b4f9c !important;
     font-weight: 700;
-    letter-spacing: -0.02em;
   }
-  .chat-shell .subtitle {
-    margin: 0.4rem 0 0;
+  .hero-card p {
+    margin: 0.35rem 0 0;
     color: #5b7290 !important;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
   }
-  .chat-shell .hero-accent {
+  .hero-accent {
     display: inline-block;
-    margin-top: 0.8rem;
-    margin-bottom: 0.85rem;
-    padding: 0.3rem 0.7rem;
+    margin-top: 0.7rem;
+    padding: 0.28rem 0.65rem;
     border-radius: 999px;
     background: #e8f1ff;
     color: #1565c0 !important;
-    font-size: 0.75rem;
+    font-size: 0.74rem;
     font-weight: 600;
   }
 </style>
@@ -518,12 +520,14 @@ with st.sidebar:
         st.markdown('<p class="side-section-title">Tools this session</p>', unsafe_allow_html=True)
         st.caption(", ".join(tools[-10:]))
 
-st.markdown('<div class="chat-shell">', unsafe_allow_html=True)
+# Single closed HTML card — do not open/close wrappers across Streamlit widgets
 st.markdown(
     """
-    <h1>HR Chat Agent</h1>
-    <p class="subtitle">Ask about leave, eligibility, holidays, and policy. Answers use your record and Ideas2IT documents.</p>
-    <span class="hero-accent">Policy-aware · Private by role</span>
+    <div class="hero-card">
+      <h1>HR Chat Agent</h1>
+      <p>Ask about leave, eligibility, holidays, and policy. Answers use your record and Ideas2IT documents.</p>
+      <span class="hero-accent">Policy-aware · Private by role</span>
+    </div>
     """,
     unsafe_allow_html=True,
 )
@@ -537,13 +541,9 @@ for msg in st.session_state.chat_log:
 if not st.session_state.chat_log:
     st.info("Start a conversation below — ask about leave balance, holidays, or policy.")
 
-st.markdown("</div>", unsafe_allow_html=True)
-
 prompt = st.chat_input("Ask about leave, policy, or eligibility…")
 if prompt:
     st.session_state.chat_log.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
 
     history = [
         {"role": m["role"], "content": m["content"]}
@@ -551,17 +551,13 @@ if prompt:
         if m["role"] in {"user", "assistant"}
     ]
 
-    with st.chat_message("assistant"):
-        with st.spinner("Looking up your record and policies…"):
-            try:
-                result = api_chat(st.session_state.token, prompt, history)
-                answer = result["answer"]
-                trace = result.get("tool_trace", [])
-            except Exception as exc:  # noqa: BLE001
-                answer = f"Sorry — the agent could not complete this request.\n\n`{exc}`"
-                trace = []
-        st.markdown(answer)
-        render_trace(trace)
+    try:
+        result = api_chat(st.session_state.token, prompt, history)
+        answer = result["answer"]
+        trace = result.get("tool_trace", [])
+    except Exception as exc:  # noqa: BLE001
+        answer = f"Sorry — the agent could not complete this request.\n\n`{exc}`"
+        trace = []
 
     called = [step.get("tool") for step in (trace or []) if step.get("type") == "call" and step.get("tool")]
     if called:
