@@ -215,40 +215,52 @@ with st.sidebar:
 
     st.divider()
     st.markdown("### Unique on this agent")
-    st.caption("Call these out in the demo.")
     st.markdown(
-        "- Privacy wall if you ask about another employee\n"
-        "- HR insights (probation / pending leave)\n"
-        "- Manager leave draft (not sent)\n"
-        "- EAP nudge if someone sounds unwell\n"
-        "- Session tool log (compliance)"
+        "- Submit / cancel / simulate-approve leave\n"
+        "- Holiday calendar + blackout periods\n"
+        "- Leave forecast + onboarding checklist\n"
+        "- Escalation tickets + privacy wall\n"
+        "- Policy citations, Hindi / short mode\n"
+        "- Manager draft, HR insights, EAP nudge"
     )
     if st.session_state.token:
         st.markdown("### Try now")
+        eid = (st.session_state.user or {}).get("employee_id")
         et = (st.session_state.user or {}).get("employment_type") or ""
         if et == "contractor":
-            st.markdown("- What should I know about my HR status?\n- Draft a leave note to my manager")
-        elif "E1003" == (st.session_state.user or {}).get("employee_id"):
-            st.markdown("- What should I know?\n- Can I take privilege leave?")
-        else:
             st.markdown(
                 "- What should I know?\n"
-                "- Draft an email to my manager for 1 day SL\n"
-                "- Show me Alice's leave balance"
+                "- Raise an HR ticket about time off\n"
+                "- Is Diwali a holiday?"
+            )
+        elif eid == "E1003":
+            st.markdown(
+                "- Onboarding checklist\n"
+                "- Can I take privilege leave?\n"
+                "- What should I know?"
+            )
+        else:
+            st.markdown(
+                "- Submit leave for 2026-11-10 to 2026-11-11 PL\n"
+                "- If I take 5 PL what's left?\n"
+                "- Can I take leave last week of December?\n"
+                "- Simulate manager approval of my pending leave\n"
+                "- Is Diwali a holiday?\n"
+                "- Reply in Hindi"
             )
         tools = st.session_state.get("session_tools") or []
         if tools:
             st.markdown("### Tools used this session")
-            st.write(", ".join(tools[-8:]))
+            st.write(", ".join(tools[-10:]))
 
     st.divider()
     st.markdown("### You can ask")
     st.markdown(
         "- What is my leave balance?\n"
-        "- I took 2 days this month — can I take one more sick leave?\n"
-        "- Am I eligible for privilege leave?\n"
-        "- How many days from 2026-10-20 to 2026-10-24?\n"
-        "- What is the maternity leave policy?"
+        "- I took 2 days this month — one more sick leave?\n"
+        "- Cancel my pending leave\n"
+        "- What is the maternity leave policy?\n"
+        "- Short answer mode"
     )
 
 if not st.session_state.token:
