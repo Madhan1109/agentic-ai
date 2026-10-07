@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import base64
 import os
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -12,6 +14,18 @@ from dotenv import load_dotenv
 load_dotenv()
 
 API_BASE = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
+ASSETS = Path(__file__).resolve().parent / "assets"
+LOGO_PATH = ASSETS / "i2i-logo.svg"
+
+
+def _logo_data_uri() -> str:
+    if LOGO_PATH.exists():
+        raw = LOGO_PATH.read_bytes()
+        return "data:image/svg+xml;base64," + base64.b64encode(raw).decode("ascii")
+    return ""
+
+
+LOGO_URI = _logo_data_uri()
 
 st.set_page_config(
     page_title="I2I Corp | HR Assistant",
@@ -20,91 +34,106 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-st.markdown(
-    """
-    <style>
-      /* Hide Streamlit chrome that shows as a blank white bar over the title */
-      header[data-testid="stHeader"] {
-        background: transparent !important;
-        height: 0 !important;
-      }
-      header[data-testid="stHeader"] * { display: none !important; }
-      [data-testid="stToolbar"],
-      [data-testid="stDecoration"],
-      [data-testid="stStatusWidget"],
-      .stDeployButton,
-      #MainMenu,
-      footer { display: none !important; visibility: hidden !important; }
+BASE_CSS = """
+<style>
+  header[data-testid="stHeader"] { background: transparent !important; height: 0 !important; }
+  header[data-testid="stHeader"] * { display: none !important; }
+  [data-testid="stToolbar"], [data-testid="stDecoration"], [data-testid="stStatusWidget"],
+  .stDeployButton, #MainMenu, footer { display: none !important; visibility: hidden !important; }
 
-      .stApp, .stApp p, .stApp span, .stApp label, .stApp li {
-        color: #1a1a1a !important;
-      }
-      .stApp { background: #f4f6f8; }
-      .block-container { padding-top: 1.25rem; max-width: 920px; }
+  .stApp { background: #f4f6f8; color: #1a1a1a; }
+  .stApp p, .stApp span, .stApp label, .stApp li { color: #1a1a1a !important; }
 
-      [data-testid="stSidebar"] {
-        background: #ffffff;
-        border-right: 1px solid #e2e6ea;
-      }
-      [data-testid="stSidebar"] * { color: #1a1a1a !important; }
+  [data-testid="stChatMessage"] {
+    background: #ffffff !important;
+    color: #1a1a1a !important;
+    border: 1px solid #e5e8eb;
+    border-radius: 10px;
+    padding: 0.55rem 0.7rem;
+  }
+  .stButton>button {
+    background: #1e4d7b;
+    color: #ffffff !important;
+    border: 0;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .stTextInput input, .stTextInput input:focus {
+    background: #ffffff !important;
+    color: #1a1a1a !important;
+    border-radius: 10px !important;
+  }
+</style>
+"""
 
-      .hero {
-        background: #1e4d7b;
-        color: #ffffff;
-        padding: 1.15rem 1.35rem;
-        border-radius: 12px;
-        margin-bottom: 1rem;
-      }
-      .hero .eyebrow {
-        margin: 0 0 0.25rem;
-        font-size: 0.75rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        opacity: 0.9;
-      }
-      .hero h1 {
-        margin: 0;
-        font-size: 1.55rem;
-        font-weight: 650;
-        color: #ffffff !important;
-      }
-      .hero p {
-        margin: 0.35rem 0 0;
-        color: #eef4fa !important;
-        font-size: 0.95rem;
-      }
+LOGIN_CSS = """
+<style>
+  [data-testid="stSidebar"] { display: none !important; }
+  .block-container { max-width: 520px; padding-top: 3.5rem; }
+  .login-shell {
+    background: linear-gradient(160deg, #eef3f8 0%, #f7f9fb 45%, #ffffff 100%);
+    border: 1px solid #d9e2ec;
+    border-radius: 22px;
+    padding: 2rem 1.75rem 1.5rem;
+    box-shadow: 0 18px 40px rgba(30, 77, 123, 0.08);
+    text-align: center;
+  }
+  .login-shell img { width: 84px; height: 84px; margin-bottom: 0.85rem; }
+  .login-shell h1 {
+    margin: 0;
+    font-size: 1.7rem;
+    color: #14395c !important;
+  }
+  .login-shell p {
+    margin: 0.45rem 0 0;
+    color: #4b5b6b !important;
+    font-size: 0.98rem;
+  }
+  .login-badge {
+    display: inline-block;
+    margin-top: 0.9rem;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    background: #e8f0f8;
+    color: #1e4d7b !important;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+</style>
+"""
 
-      [data-testid="stChatMessage"] {
-        background: #ffffff !important;
-        color: #1a1a1a !important;
-        border: 1px solid #e5e8eb;
-        border-radius: 10px;
-        padding: 0.55rem 0.7rem;
-      }
-      [data-testid="stChatMessage"] p,
-      [data-testid="stChatMessage"] li,
-      [data-testid="stChatMessage"] span {
-        color: #1a1a1a !important;
-      }
-      [data-testid="stChatMessage"] code {
-        background: #f0f2f4 !important;
-        color: #111 !important;
-      }
-
-      .stButton>button {
-        background: #1e4d7b;
-        color: #ffffff !important;
-        border: 0;
-        border-radius: 8px;
-      }
-      .stTextInput input {
-        background: #ffffff !important;
-        color: #1a1a1a !important;
-      }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+APP_CSS = """
+<style>
+  [data-testid="stSidebar"] {
+    background: #0f2f4d;
+    border-right: 1px solid #1a456b;
+  }
+  [data-testid="stSidebar"] * { color: #f4f8fc !important; }
+  [data-testid="stSidebar"] .stCaption, [data-testid="stSidebar"] p {
+    color: #d5e4f2 !important;
+  }
+  [data-testid="stSidebar"] .stButton>button {
+    background: #2f6fad;
+    border: 1px solid #4a88c4;
+  }
+  .block-container { padding-top: 1.1rem; max-width: 920px; }
+  .brand-row {
+    display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.8rem;
+  }
+  .brand-row img { width: 42px; height: 42px; border-radius: 10px; }
+  .brand-row h2 { margin: 0; font-size: 1.15rem; color: #ffffff !important; }
+  .brand-row p { margin: 0; font-size: 0.8rem; color: #c9daf0 !important; }
+  .hero {
+    background: #1e4d7b;
+    color: #ffffff;
+    padding: 1.05rem 1.25rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+  }
+  .hero h1 { margin: 0; font-size: 1.45rem; color: #ffffff !important; }
+  .hero p { margin: 0.35rem 0 0; color: #e8f1fa !important; }
+</style>
+"""
 
 
 def api_login(email: str, password: str) -> dict[str, Any]:
@@ -159,9 +188,11 @@ def sign_out() -> None:
     st.session_state.user = None
     st.session_state.chat_log = []
     st.session_state.session_tools = []
-    for key in ("login_id", "login_password"):
-        if key in st.session_state:
-            del st.session_state[key]
+
+
+def new_chat() -> None:
+    st.session_state.chat_log = []
+    st.session_state.session_tools = []
 
 
 if "token" not in st.session_state:
@@ -173,99 +204,103 @@ if "chat_log" not in st.session_state:
 if "session_tools" not in st.session_state:
     st.session_state.session_tools = []
 
+st.markdown(BASE_CSS, unsafe_allow_html=True)
+
+# ---------- LOGIN PAGE ----------
+if not st.session_state.token:
+    st.markdown(LOGIN_CSS, unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <div class="login-shell">
+          <img src="{LOGO_URI}" alt="I2I Corp logo" />
+          <h1>I2I Corp</h1>
+          <p>HR Chat Agent — sign in with your employee ID or work email</p>
+          <div class="login-badge">Secure employee access</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.write("")
+    with st.form("login_form"):
+        login = st.text_input("Email or employee ID", placeholder="E1001")
+        password = st.text_input("Password", type="password")
+        submitted = st.form_submit_button("Sign in", type="primary", use_container_width=True)
+    if submitted:
+        login = (login or "").replace("＠", "@").strip()
+        if not login or not password:
+            st.error("Enter employee ID (for example E1001) and password.")
+        else:
+            try:
+                data = api_login(login, password)
+                st.session_state.token = data["access_token"]
+                st.session_state.user = data
+                st.session_state.chat_log = []
+                st.session_state.session_tools = []
+                st.rerun()
+            except Exception as exc:  # noqa: BLE001
+                st.error(str(exc))
+    st.caption("Use a seeded employee account from the HR database.")
+    st.stop()
+
+# ---------- APP (logged in) ----------
+st.markdown(APP_CSS, unsafe_allow_html=True)
+u = st.session_state.user or {}
+
+with st.sidebar:
+    st.markdown(
+        f"""
+        <div class="brand-row">
+          <img src="{LOGO_URI}" alt="I2I" />
+          <div>
+            <h2>I2I Corp</h2>
+            <p>HR Chat Agent</p>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown(f"**{u.get('full_name', '')}**")
+    st.caption(f"{u.get('employee_id', '')} · {u.get('department', '')}")
+    st.caption(u.get("email", ""))
+
+    if st.button("New chat", key="new_chat_btn", use_container_width=True):
+        new_chat()
+        st.rerun()
+    if st.button("Sign out", key="sign_out_btn", use_container_width=True):
+        sign_out()
+        st.rerun()
+
+    st.divider()
+    st.markdown("### Try asking")
+    eid = u.get("employee_id")
+    et = u.get("employment_type") or ""
+    if et == "contractor":
+        st.markdown("- What should I know?\n- Is Diwali a holiday?\n- Raise an HR ticket")
+    elif eid == "E1003":
+        st.markdown("- Onboarding checklist\n- Can I take privilege leave?\n- What should I know?")
+    else:
+        st.markdown(
+            "- What is my leave balance?\n"
+            "- Submit leave for 2026-11-10 to 2026-11-11 PL\n"
+            "- Is Diwali a holiday?\n"
+            "- If I take 5 PL what's left?"
+        )
+
+    tools = st.session_state.get("session_tools") or []
+    if tools:
+        st.divider()
+        st.markdown("### Tools this session")
+        st.write(", ".join(tools[-10:]))
+
 st.markdown(
     """
     <div class="hero">
-      <p class="eyebrow">I2I Corp People Experience</p>
       <h1>HR Chat Agent</h1>
-      <p>Ask about leave, eligibility, and policy. Answers use your record and company documents.</p>
+      <p>Ask about leave, eligibility, holidays, and policy. Answers use your record and I2I documents.</p>
     </div>
     """,
     unsafe_allow_html=True,
 )
-
-with st.sidebar:
-    st.markdown("### Sign in")
-    st.caption("Use employee ID (E1001) or work email, then password.")
-    if st.session_state.token:
-        u = st.session_state.user
-        st.markdown(f"**{u['full_name']}**")
-        st.write(f"{u['employee_id']} · {u['department']}")
-        st.write(u["email"])
-        if st.button("Sign out", key="sign_out_btn", use_container_width=True):
-            sign_out()
-            st.rerun()
-    else:
-        with st.form("login_form"):
-            login = st.text_input("Email or employee ID", placeholder="E1001")
-            password = st.text_input("Password", type="password")
-            submitted = st.form_submit_button("Continue", type="primary", use_container_width=True)
-        if submitted:
-            login = (login or "").replace("＠", "@").strip()
-            if not login or not password:
-                st.error("Enter employee ID (for example E1001) and password, then Continue.")
-            else:
-                try:
-                    data = api_login(login, password)
-                    st.session_state.token = data["access_token"]
-                    st.session_state.user = data
-                    st.rerun()
-                except Exception as exc:  # noqa: BLE001
-                    st.error(str(exc))
-
-    st.divider()
-    st.markdown("### Unique on this agent")
-    st.markdown(
-        "- Submit / cancel / simulate-approve leave\n"
-        "- Holiday calendar + blackout periods\n"
-        "- Leave forecast + onboarding checklist\n"
-        "- Escalation tickets + privacy wall\n"
-        "- Policy citations, Hindi / short mode\n"
-        "- Manager draft, HR insights, EAP nudge"
-    )
-    if st.session_state.token:
-        st.markdown("### Try now")
-        eid = (st.session_state.user or {}).get("employee_id")
-        et = (st.session_state.user or {}).get("employment_type") or ""
-        if et == "contractor":
-            st.markdown(
-                "- What should I know?\n"
-                "- Raise an HR ticket about time off\n"
-                "- Is Diwali a holiday?"
-            )
-        elif eid == "E1003":
-            st.markdown(
-                "- Onboarding checklist\n"
-                "- Can I take privilege leave?\n"
-                "- What should I know?"
-            )
-        else:
-            st.markdown(
-                "- Submit leave for 2026-11-10 to 2026-11-11 PL\n"
-                "- If I take 5 PL what's left?\n"
-                "- Can I take leave last week of December?\n"
-                "- Simulate manager approval of my pending leave\n"
-                "- Is Diwali a holiday?\n"
-                "- Reply in Hindi"
-            )
-        tools = st.session_state.get("session_tools") or []
-        if tools:
-            st.markdown("### Tools used this session")
-            st.write(", ".join(tools[-10:]))
-
-    st.divider()
-    st.markdown("### You can ask")
-    st.markdown(
-        "- What is my leave balance?\n"
-        "- I took 2 days this month — one more sick leave?\n"
-        "- Cancel my pending leave\n"
-        "- What is the maternity leave policy?\n"
-        "- Short answer mode"
-    )
-
-if not st.session_state.token:
-    st.write("Sign in on the left to start a private HR conversation.")
-    st.stop()
 
 for msg in st.session_state.chat_log:
     with st.chat_message(msg["role"]):
