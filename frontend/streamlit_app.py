@@ -175,44 +175,54 @@ LOGIN_CSS = """
     color: #111827 !important;
   }
 
+  /* Match email + password field widths: reserve a right gutter for the eye icon */
   [data-testid="stForm"] .stTextInput { width: 100% !important; }
   [data-testid="stForm"] [data-testid="stTextInputRootElement"] {
-    position: relative !important;
     width: 100% !important;
-    display: grid !important;
-    grid-template-columns: 1fr !important;
+    display: flex !important;
     align-items: center !important;
+    gap: 0.2rem !important;
+    box-sizing: border-box !important;
   }
-  [data-testid="stForm"] [data-testid="stTextInputRootElement"] > div,
+  [data-testid="stForm"] [data-testid="stTextInputRootElement"] > div {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: calc(100% - 2.35rem) !important;
+  }
   [data-testid="stForm"] [data-baseweb="base-input"],
   [data-testid="stForm"] [data-baseweb="input"] {
     width: 100% !important;
     max-width: 100% !important;
-    grid-column: 1 !important;
-    grid-row: 1 !important;
   }
   [data-testid="stForm"] [data-baseweb="input"] input {
     width: 100% !important;
-    padding-right: 2.75rem !important;
     color: #111827 !important;
     box-sizing: border-box !important;
+    padding-right: 0.75rem !important;
+  }
+  /* Email has no eye button — keep the same right gutter so boxes match */
+  [data-testid="stForm"] [data-testid="stTextInputRootElement"]:not(:has(button)) {
+    padding-right: 2.35rem !important;
+  }
+  [data-testid="stForm"] [data-testid="stTextInputRootElement"]:not(:has(button)) > div {
+    max-width: 100% !important;
   }
   [data-testid="stForm"] [data-testid="stTextInputRootElement"] button {
-    grid-column: 1 !important;
-    grid-row: 1 !important;
-    justify-self: end !important;
-    align-self: center !important;
-    width: 2rem !important;
-    min-width: 2rem !important;
-    height: 2rem !important;
-    min-height: 2rem !important;
-    margin: 0 0.35rem 0 0 !important;
+    position: static !important;
+    transform: none !important;
+    flex: 0 0 2.1rem !important;
+    width: 2.1rem !important;
+    min-width: 2.1rem !important;
+    height: 2.1rem !important;
+    min-height: 2.1rem !important;
+    margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;
-    background: transparent !important;
+    border-radius: 8px !important;
+    background: #eef2f7 !important;
     box-shadow: none !important;
     color: #4b5563 !important;
-    z-index: 3 !important;
   }
 
   .stCaption, [data-testid="stCaptionContainer"] p {
