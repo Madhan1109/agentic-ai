@@ -175,20 +175,20 @@ LOGIN_CSS = """
     color: #111827 !important;
   }
 
-  /* Match email + password field widths: reserve a right gutter for the eye icon */
+  /* Force email + password bordered boxes to identical width; eye sits in the right gutter */
   [data-testid="stForm"] .stTextInput { width: 100% !important; }
   [data-testid="stForm"] [data-testid="stTextInputRootElement"] {
     width: 100% !important;
     display: flex !important;
     align-items: center !important;
-    gap: 0.2rem !important;
+    gap: 0.25rem !important;
     box-sizing: border-box !important;
   }
   [data-testid="stForm"] [data-testid="stTextInputRootElement"] > div {
-    flex: 1 1 auto !important;
-    width: auto !important;
+    flex: 0 0 calc(100% - 2.4rem) !important;
+    width: calc(100% - 2.4rem) !important;
+    max-width: calc(100% - 2.4rem) !important;
     min-width: 0 !important;
-    max-width: calc(100% - 2.35rem) !important;
   }
   [data-testid="stForm"] [data-baseweb="base-input"],
   [data-testid="stForm"] [data-baseweb="input"] {
@@ -199,23 +199,15 @@ LOGIN_CSS = """
     width: 100% !important;
     color: #111827 !important;
     box-sizing: border-box !important;
-    padding-right: 0.75rem !important;
-  }
-  /* Email has no eye button — keep the same right gutter so boxes match */
-  [data-testid="stForm"] [data-testid="stTextInputRootElement"]:not(:has(button)) {
-    padding-right: 2.35rem !important;
-  }
-  [data-testid="stForm"] [data-testid="stTextInputRootElement"]:not(:has(button)) > div {
-    max-width: 100% !important;
   }
   [data-testid="stForm"] [data-testid="stTextInputRootElement"] button {
     position: static !important;
     transform: none !important;
-    flex: 0 0 2.1rem !important;
-    width: 2.1rem !important;
-    min-width: 2.1rem !important;
-    height: 2.1rem !important;
-    min-height: 2.1rem !important;
+    flex: 0 0 2.15rem !important;
+    width: 2.15rem !important;
+    min-width: 2.15rem !important;
+    height: 2.15rem !important;
+    min-height: 2.15rem !important;
     margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;
