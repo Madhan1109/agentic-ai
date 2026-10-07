@@ -160,6 +160,7 @@ LOGIN_CSS = """
   .login-chip {
     display: inline-block;
     margin-top: 0.65rem;
+    margin-bottom: 0.85rem;
     padding: 0.28rem 0.7rem;
     border-radius: 999px;
     background: #e8f1ff;
@@ -167,19 +168,6 @@ LOGIN_CSS = """
     color: #111827 !important;
     font-size: 0.74rem;
     font-weight: 600;
-  }
-  .login-title h2 {
-    margin: 0.75rem 0 0.2rem;
-    color: #111827 !important;
-    font-size: 1.1rem;
-    font-weight: 700;
-    text-align: center;
-  }
-  .login-title p {
-    margin: 0 0 0.7rem;
-    color: #111827 !important;
-    font-size: 0.88rem;
-    text-align: center;
   }
 
   [data-testid="stForm"] label,
@@ -190,9 +178,17 @@ LOGIN_CSS = """
     color: #111827 !important;
   }
 
-  /* Keep password eye toggle inside the input */
+  /* Match email + password field widths; keep eye overlay inside password */
+  [data-testid="stForm"] .stTextInput,
+  [data-testid="stForm"] [data-testid="stTextInputRootElement"],
+  [data-testid="stForm"] [data-baseweb="base-input"],
+  [data-testid="stForm"] [data-baseweb="input"] {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
   [data-testid="stForm"] [data-testid="stTextInputRootElement"] {
     position: relative !important;
+    display: block !important;
   }
   [data-testid="stForm"] [data-baseweb="input"] {
     position: relative !important;
@@ -200,15 +196,14 @@ LOGIN_CSS = """
     border-radius: 12px !important;
   }
   [data-testid="stForm"] [data-baseweb="input"] input {
-    padding-right: 2.6rem !important;
+    width: 100% !important;
+    padding-right: 2.75rem !important;
     color: #111827 !important;
+    box-sizing: border-box !important;
   }
-  [data-testid="stForm"] [data-testid="stTextInputRootElement"] button,
-  [data-testid="stForm"] [data-baseweb="input"] button,
-  [data-testid="stForm"] button[kind="secondary"],
-  [data-testid="stForm"] button[data-testid="baseButton-secondary"] {
+  [data-testid="stForm"] [data-testid="stTextInputRootElement"] button {
     position: absolute !important;
-    right: 0.35rem !important;
+    right: 0.4rem !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
     width: 2rem !important;
@@ -224,8 +219,7 @@ LOGIN_CSS = """
     color: #4b5563 !important;
     z-index: 3 !important;
   }
-  [data-testid="stForm"] [data-testid="stTextInputRootElement"] button svg,
-  [data-testid="stForm"] [data-baseweb="input"] button svg {
+  [data-testid="stForm"] [data-testid="stTextInputRootElement"] button svg {
     fill: #4b5563 !important;
   }
 
@@ -253,8 +247,19 @@ APP_CSS = """
   [data-testid="stSidebar"] {
     background: linear-gradient(180deg, #0b4f9c 0%, #1565c0 55%, #1a73c7 100%) !important;
     border-right: 1px solid rgba(255, 255, 255, 0.14);
+    min-width: 17rem !important;
   }
-  [data-testid="stSidebar"] > div:first-child { padding-top: 1rem; }
+  [data-testid="stSidebar"] > div:first-child {
+    padding-top: 1rem;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100vh !important;
+  }
+  [data-testid="stSidebarUserContent"] {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: calc(100vh - 2rem) !important;
+  }
   [data-testid="stSidebar"] * { color: #eef6ff !important; }
   [data-testid="stSidebar"] .stCaption,
   [data-testid="stSidebar"] p,
@@ -295,23 +300,35 @@ APP_CSS = """
     text-align: center;
   }
   .side-brand .tag {
-    margin: 0.15rem 0 0.65rem;
+    margin: 0.15rem 0 0;
     font-size: 0.76rem;
     color: #d7ebff !important;
     text-align: center;
   }
-  .side-brand .user-name {
-    margin: 0;
-    color: #ffffff !important;
-    font-weight: 600;
-    font-size: 0.92rem;
-    text-align: center;
+  .sidebar-spacer {
+    flex: 1 1 auto;
+    min-height: 3rem;
   }
-  .side-brand .user-meta {
-    margin: 0.18rem 0 0;
+  .side-user-hint {
+    margin: 0.4rem 0 0.35rem;
+    font-size: 0.72rem;
     color: #d0e4ff !important;
-    font-size: 0.74rem;
-    text-align: center;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  /* Keep account controls pinned near sidebar bottom */
+  [data-testid="stSidebar"] [data-testid="stPopover"] {
+    width: 100% !important;
+  }
+  [data-testid="stSidebar"] [data-testid="stPopover"] > button,
+  [data-testid="stSidebar"] [data-testid="stPopoverButton"] {
+    width: 100% !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    border: 1px solid rgba(255, 255, 255, 0.24) !important;
+    color: #ffffff !important;
+    border-radius: 12px !important;
+    justify-content: flex-start !important;
   }
   .side-section-title {
     margin: 0.8rem 0 0.45rem;
@@ -431,7 +448,6 @@ if "chat_log" not in st.session_state:
     st.session_state.chat_log = []
 if "session_tools" not in st.session_state:
     st.session_state.session_tools = []
-
 st.markdown(BASE_CSS, unsafe_allow_html=True)
 
 # ---------- LOGIN PAGE ----------
@@ -445,10 +461,6 @@ if not st.session_state.token:
               <h1>HR Chat Agent</h1>
               <p>Sign in with your employee ID or work email to ask about leave, eligibility, holidays, and policy.</p>
               <div class="login-chip">Secure employee access</div>
-            </div>
-            <div class="login-title">
-              <h2>Welcome back</h2>
-              <p>Enter your credentials to continue.</p>
             </div>
             """,
             unsafe_allow_html=True,
@@ -484,9 +496,6 @@ with st.sidebar:
           <img src="{LOGO_URI}" alt="Ideas2IT" />
           <h2>Ideas2IT</h2>
           <p class="tag">HR Chat Agent</p>
-          <p class="user-name">{u.get('full_name', '')}</p>
-          <p class="user-meta">{u.get('employee_id', '')} · {u.get('department', '')}</p>
-          <p class="user-meta">{u.get('email', '')}</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -494,9 +503,6 @@ with st.sidebar:
 
     if st.button("New chat", key="new_chat_btn", type="primary", use_container_width=True):
         new_chat()
-        st.rerun()
-    if st.button("Sign out", key="sign_out_btn", use_container_width=True):
-        sign_out()
         st.rerun()
 
     st.markdown('<p class="side-section-title">Try asking</p>', unsafe_allow_html=True)
@@ -519,6 +525,20 @@ with st.sidebar:
     if tools:
         st.markdown('<p class="side-section-title">Tools this session</p>', unsafe_allow_html=True)
         st.caption(", ".join(tools[-10:]))
+
+    # Push account menu to sidebar bottom-left; Sign out only after opening the name
+    st.markdown('<div class="sidebar-spacer"></div>', unsafe_allow_html=True)
+    st.markdown('<p class="side-user-hint">Account</p>', unsafe_allow_html=True)
+
+    full_name = (u.get("full_name") or "User").strip()
+    short_name = full_name.split()[0] if full_name else "User"
+    with st.popover(f"👤 {short_name}", use_container_width=True):
+        st.markdown(f"**{full_name}**")
+        st.caption(f"{u.get('employee_id', '')} · {u.get('department', '')}")
+        st.caption(u.get("email", ""))
+        if st.button("Sign out", key="sign_out_btn", use_container_width=True):
+            sign_out()
+            st.rerun()
 
 # Single closed HTML card — do not open/close wrappers across Streamlit widgets
 st.markdown(
