@@ -10,7 +10,15 @@ from langchain_core.tools import tool
 from sqlalchemy.orm import Session
 
 from backend.app.agent.rag import format_policy_context, get_retriever
-from backend.app.db.models import Employee, LeaveBalance, LeaveRequest, get_session_factory
+from backend.app.db.models import (
+    BlackoutPeriod,
+    Employee,
+    EscalationTicket,
+    Holiday,
+    LeaveBalance,
+    LeaveRequest,
+    get_session_factory,
+)
 
 # Set per-request by the API layer so tools only access the authenticated employee.
 CURRENT_EMPLOYEE_ID: str | None = None
@@ -320,6 +328,7 @@ def get_recent_leave_requests(
         )
         payload = [
             {
+                "request_id": r.id,
                 "leave_type": r.leave_type,
                 "start_date": r.start_date.isoformat(),
                 "end_date": r.end_date.isoformat(),
@@ -330,6 +339,343 @@ def get_recent_leave_requests(
             for r in rows
         ]
         return json.dumps({"employee_id": emp.employee_id, "requests": payload}, indent=2)
+
+
+@tool
+def submit_leave_request(
+    leave_type: Annotated[str, "PL, SL, or CL"],
+    start_date: Annotated[str, "Start date YYYY-MM-DD"],
+    end_date: Annotated[str, "End date YYYY-MM-DD"],
+    reason: Annotated[str, "Short reason"] = "personal",
+    half_day: Annotated[bool, "Half-day request"] = False,
+) -> str:
+    """Create a pending leave request for the authenticated employee and increase pending balance."""
+    lt = leave_type.upper().strip()
+    try:
+        start = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end = datetime.strptime(end_date, "%Y-%m-%d").date()
+    except ValueError as exc:
+        return json.dumps({"error": f"Invalid date: {exc}"})
+
+    days = 0.5 if half_day else _working_days(start, end)
+    with _session() as session:
+        emp = _require_employee(session)
+        tenure_days = (date.today() - emp.join_date).days
+        if emp.employment_type == "contractor":
+            return json.dumps({"ok": False, "error": "Contractors cannot submit company leave."})
+        if lt in {"PL", "CL"} and tenure_days < 90:
+            return json.dumps({"ok": False, "error": "PL/CL not generally usable during first 90 days."})
+
+        # Blackout check
+        blackouts = (
+            session.query(BlackoutPeriod)
+            .filter(BlackoutPeriod.start_date <= end, BlackoutPeriod.end_date >= start)
+            .all()
+        )
+        for bo in blackouts:
+            if bo.department in {"ALL", emp.department} and lt == "PL":
+                return json.dumps(
+                    {
+                        "ok": False,
+                        "error": f"Blackout '{bo.name}' ({bo.start_date} to {bo.end_date}): {bo.reason}",
+                    }
+                )
+
+        bal = (
+            session.query(LeaveBalance)
+            .filter(
+                LeaveBalance.employee_pk == emp.id,
+                LeaveBalance.year == date.today().year,
+                LeaveBalance.leave_type == lt,
+            )
+            .first()
+        )
+        if not bal or bal.available < days:
+            return json.dumps(
+                {
+                    "ok": False,
+                    "error": f"Insufficient {lt} balance. Available={bal.available if bal else 0}, needed={days}.",
+                }
+            )
+
+        req = LeaveRequest(
+            employee_pk=emp.id,
+            leave_type=lt,
+            start_date=start,
+            end_date=end,
+            days=days,
+            status="pending",
+            reason=reason,
+        )
+        bal.pending = round(bal.pending + days, 2)
+        session.add(req)
+        session.commit()
+        session.refresh(req)
+        return json.dumps(
+            {
+                "ok": True,
+                "request_id": req.id,
+                "leave_type": lt,
+                "days": days,
+                "status": "pending",
+                "available_after": bal.available,
+                "message": "Leave request submitted and awaiting manager approval.",
+            },
+            indent=2,
+        )
+
+
+@tool
+def cancel_leave_request(
+    request_id: Annotated[int | None, "Leave request id to cancel; omit to cancel latest pending"] = None,
+) -> str:
+    """Withdraw a pending leave request for the authenticated employee and free pending balance."""
+    with _session() as session:
+        emp = _require_employee(session)
+        q = session.query(LeaveRequest).filter(
+            LeaveRequest.employee_pk == emp.id,
+            LeaveRequest.status == "pending",
+        )
+        if request_id is not None:
+            req = q.filter(LeaveRequest.id == int(request_id)).first()
+        else:
+            req = q.order_by(LeaveRequest.created_at.desc()).first()
+        if not req:
+            return json.dumps({"ok": False, "error": "No pending leave request found to cancel."})
+
+        bal = (
+            session.query(LeaveBalance)
+            .filter(
+                LeaveBalance.employee_pk == emp.id,
+                LeaveBalance.year == date.today().year,
+                LeaveBalance.leave_type == req.leave_type,
+            )
+            .first()
+        )
+        if bal:
+            bal.pending = max(0.0, round(bal.pending - req.days, 2))
+        req.status = "cancelled"
+        session.commit()
+        return json.dumps(
+            {
+                "ok": True,
+                "request_id": req.id,
+                "leave_type": req.leave_type,
+                "days": req.days,
+                "status": "cancelled",
+                "available_after": bal.available if bal else None,
+            },
+            indent=2,
+        )
+
+
+@tool
+def approve_pending_leave(
+    request_id: Annotated[int | None, "Pending request id; omit for latest pending"] = None,
+) -> str:
+    """Simulate manager approval of the signed-in employee's own pending leave (demo). Moves days from pending to used."""
+    with _session() as session:
+        emp = _require_employee(session)
+        q = session.query(LeaveRequest).filter(
+            LeaveRequest.employee_pk == emp.id,
+            LeaveRequest.status == "pending",
+        )
+        req = q.filter(LeaveRequest.id == int(request_id)).first() if request_id is not None else q.order_by(LeaveRequest.created_at.desc()).first()
+        if not req:
+            return json.dumps({"ok": False, "error": "No pending request to approve."})
+
+        bal = (
+            session.query(LeaveBalance)
+            .filter(
+                LeaveBalance.employee_pk == emp.id,
+                LeaveBalance.year == date.today().year,
+                LeaveBalance.leave_type == req.leave_type,
+            )
+            .first()
+        )
+        if bal:
+            bal.pending = max(0.0, round(bal.pending - req.days, 2))
+            bal.used = round(bal.used + req.days, 2)
+        req.status = "approved"
+        session.commit()
+        return json.dumps(
+            {
+                "ok": True,
+                "request_id": req.id,
+                "status": "approved",
+                "leave_type": req.leave_type,
+                "days": req.days,
+                "simulation": True,
+                "message": "Simulated manager approval. Days moved from pending to used.",
+                "available_after": bal.available if bal else None,
+            },
+            indent=2,
+        )
+
+
+@tool
+def get_holidays(
+    year: Annotated[int | None, "Calendar year; default current year"] = None,
+    query: Annotated[str, "Optional holiday name filter, e.g. Diwali"] = "",
+) -> str:
+    """List company public holidays, optionally filtered by name."""
+    y = year or date.today().year
+    with _session() as session:
+        rows = session.query(Holiday).filter(Holiday.year == y).order_by(Holiday.holiday_date).all()
+        if query.strip():
+            q = query.lower().strip()
+            rows = [r for r in rows if q in r.name.lower()]
+        return json.dumps(
+            {
+                "year": y,
+                "count": len(rows),
+                "holidays": [{"name": r.name, "date": r.holiday_date.isoformat()} for r in rows],
+            },
+            indent=2,
+        )
+
+
+@tool
+def check_leave_blackout(
+    start_date: Annotated[str, "Start date YYYY-MM-DD"],
+    end_date: Annotated[str, "End date YYYY-MM-DD"],
+) -> str:
+    """Check whether a date range overlaps a team/company leave blackout for the employee's department."""
+    try:
+        start = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end = datetime.strptime(end_date, "%Y-%m-%d").date()
+    except ValueError as exc:
+        return json.dumps({"error": f"Invalid date: {exc}"})
+
+    with _session() as session:
+        emp = _require_employee(session)
+        rows = (
+            session.query(BlackoutPeriod)
+            .filter(BlackoutPeriod.start_date <= end, BlackoutPeriod.end_date >= start)
+            .all()
+        )
+        hits = [
+            {
+                "name": b.name,
+                "start_date": b.start_date.isoformat(),
+                "end_date": b.end_date.isoformat(),
+                "department": b.department,
+                "reason": b.reason,
+            }
+            for b in rows
+            if b.department in {"ALL", emp.department}
+        ]
+        return json.dumps(
+            {
+                "employee_id": emp.employee_id,
+                "department": emp.department,
+                "blocked": bool(hits),
+                "blackouts": hits,
+            },
+            indent=2,
+        )
+
+
+@tool
+def forecast_leave_balance(
+    leave_type: Annotated[str, "PL, SL, or CL"],
+    planned_days: Annotated[float, "Days the employee plans to take"],
+) -> str:
+    """Forecast remaining leave if the employee takes planned_days of a leave type."""
+    lt = leave_type.upper().strip()
+    planned = float(planned_days)
+    with _session() as session:
+        emp = _require_employee(session)
+        bal = (
+            session.query(LeaveBalance)
+            .filter(
+                LeaveBalance.employee_pk == emp.id,
+                LeaveBalance.year == date.today().year,
+                LeaveBalance.leave_type == lt,
+            )
+            .first()
+        )
+        if not bal:
+            return json.dumps({"ok": False, "error": f"No {lt} balance on file."})
+        remaining = round(bal.available - planned, 2)
+        return json.dumps(
+            {
+                "ok": True,
+                "leave_type": lt,
+                "current_available": bal.available,
+                "planned_days": planned,
+                "remaining_after": remaining,
+                "feasible": remaining >= 0,
+            },
+            indent=2,
+        )
+
+
+@tool
+def get_onboarding_checklist() -> str:
+    """Return an onboarding checklist tailored to tenure/employment type (useful for new joiners)."""
+    with _session() as session:
+        emp = _require_employee(session)
+        tenure_days = (date.today() - emp.join_date).days
+        items: list[dict] = []
+        if emp.employment_type == "contractor":
+            items = [
+                {"step": "Confirm SoW start date with manager", "done": True},
+                {"step": "Complete security / laptop setup", "done": tenure_days > 3},
+                {"step": "Time-off follows SoW (not company leave)", "done": False},
+            ]
+        elif tenure_days < 90:
+            items = [
+                {"step": "Complete Day-1 HR paperwork", "done": tenure_days >= 1},
+                {"step": "Benefits enrollment (if eligible)", "done": tenure_days >= 14},
+                {"step": "Probation check-in with manager", "done": tenure_days >= 30},
+                {"step": "PL/CL generally usable after 90 days", "done": False},
+                {"step": "Sick leave available with policy limits", "done": True},
+            ]
+        else:
+            items = [
+                {"step": "Onboarding complete", "done": True},
+                {"step": "Annual leave planning with manager", "done": False},
+                {"step": "Review benefits / EAP annually", "done": False},
+            ]
+        return json.dumps(
+            {
+                "employee_id": emp.employee_id,
+                "tenure_days": tenure_days,
+                "employment_type": emp.employment_type,
+                "checklist": items,
+            },
+            indent=2,
+        )
+
+
+@tool
+def create_escalation_ticket(
+    topic: Annotated[str, "Short topic, e.g. leave exception"],
+    details: Annotated[str, "What the employee needs from HRBP"] = "",
+) -> str:
+    """Log an open HR escalation ticket for HRBP follow-up (stored in SQLite)."""
+    with _session() as session:
+        emp = _require_employee(session)
+        ticket = EscalationTicket(
+            employee_pk=emp.id,
+            topic=(topic or "HR help")[:255],
+            details=details or "",
+            status="open",
+        )
+        session.add(ticket)
+        session.commit()
+        session.refresh(ticket)
+        return json.dumps(
+            {
+                "ok": True,
+                "ticket_id": ticket.id,
+                "status": ticket.status,
+                "topic": ticket.topic,
+                "message": "Ticket logged for HRBP. This does not replace emailing your HRBP.",
+            },
+            indent=2,
+        )
 
 
 @tool
@@ -432,6 +778,14 @@ HR_TOOLS = [
     calculate_leave_days,
     evaluate_leave_scenario,
     get_recent_leave_requests,
+    submit_leave_request,
+    cancel_leave_request,
+    approve_pending_leave,
+    get_holidays,
+    check_leave_blackout,
+    forecast_leave_balance,
+    get_onboarding_checklist,
+    create_escalation_ticket,
     get_hr_insights,
     draft_manager_leave_note,
 ]

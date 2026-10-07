@@ -1,4 +1,4 @@
-"""Seed demo employees and leave balances for the HR Chat Agent."""
+"""Seed demo employees, leave, holidays, blackouts for the HR Chat Agent."""
 
 from datetime import date
 from pathlib import Path
@@ -6,7 +6,17 @@ from pathlib import Path
 from passlib.context import CryptContext
 
 from backend.app.config import get_settings
-from backend.app.db.models import Base, Employee, LeaveBalance, LeaveRequest, get_engine, get_session_factory
+from backend.app.db.models import (
+    Base,
+    BlackoutPeriod,
+    Employee,
+    EscalationTicket,
+    Holiday,
+    LeaveBalance,
+    LeaveRequest,
+    get_engine,
+    get_session_factory,
+)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -64,7 +74,7 @@ EMPLOYEES = [
         "employment_type": "full-time",
         "role_title": "Marketing Specialist",
         "manager_email": "dana.kim@i2icorp.example",
-        "join_date": date(2026, 8, 1),  # still in probation as of assessment date context
+        "join_date": date(2026, 8, 1),
         "location": "New York, NY",
         "balances": [
             {"leave_type": "PL", "entitled": 7.5, "used": 0, "pending": 0, "carried_forward": 0},
@@ -88,6 +98,38 @@ EMPLOYEES = [
     },
 ]
 
+HOLIDAYS_2026 = [
+    ("New Year's Day", date(2026, 1, 1)),
+    ("Martin Luther King Jr. Day", date(2026, 1, 19)),
+    ("Presidents' Day", date(2026, 2, 16)),
+    ("Memorial Day", date(2026, 5, 25)),
+    ("Juneteenth", date(2026, 6, 19)),
+    ("Independence Day", date(2026, 7, 3)),
+    ("Labor Day", date(2026, 9, 7)),
+    ("Thanksgiving", date(2026, 11, 26)),
+    ("Day after Thanksgiving", date(2026, 11, 27)),
+    ("Christmas Eve", date(2026, 12, 24)),
+    ("Christmas Day", date(2026, 12, 25)),
+    ("Diwali (observed)", date(2026, 11, 8)),
+]
+
+BLACKOUTS = [
+    {
+        "name": "Year-end close",
+        "start_date": date(2026, 12, 15),
+        "end_date": date(2026, 12, 31),
+        "department": "ALL",
+        "reason": "Finance and delivery blackout; PL restricted unless Director approves.",
+    },
+    {
+        "name": "Major release freeze",
+        "start_date": date(2026, 10, 27),
+        "end_date": date(2026, 11, 7),
+        "department": "Engineering",
+        "reason": "Product release window; Engineering PL needs Director exception.",
+    },
+]
+
 
 def seed(force: bool = False) -> None:
     settings = get_settings()
@@ -107,6 +149,9 @@ def seed(force: bool = False) -> None:
             return
 
         if force:
+            session.query(EscalationTicket).delete()
+            session.query(BlackoutPeriod).delete()
+            session.query(Holiday).delete()
             session.query(LeaveRequest).delete()
             session.query(LeaveBalance).delete()
             session.query(Employee).delete()
@@ -157,10 +202,17 @@ def seed(force: bool = False) -> None:
                     )
                 )
 
+        for name, d in HOLIDAYS_2026:
+            session.add(Holiday(name=name, holiday_date=d, year=d.year, region="US"))
+
+        for bo in BLACKOUTS:
+            session.add(BlackoutPeriod(**bo))
+
         session.commit()
         print("Seeded demo employees:")
         for row in EMPLOYEES:
             print(f"  - {row['email']} / {DEMO_PASSWORD} ({row['employee_id']})")
+        print(f"Seeded {len(HOLIDAYS_2026)} holidays and {len(BLACKOUTS)} blackout periods.")
 
 
 if __name__ == "__main__":

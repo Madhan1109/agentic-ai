@@ -16,19 +16,35 @@ Agentic AI assessment project: an authenticated **HR Chat Agent** that answers p
 
 These go beyond a basic FAQ chatbot:
 
-1. **Privacy wall** — Asking about another employee (e.g. Alice's balance while signed in as Bob) is refused. Tools only see the JWT employee.
-2. **HR insights briefing** — “What should I know?” returns probation countdown, pending requests, and a next action.
-3. **Manager leave draft** — “Draft an email to my manager…” builds a note with the real manager address and balance. It is **not sent**.
-4. **Wellbeing / EAP nudge** — Distressed language (burnout, overwhelmed) adds a confidential EAP pointer.
-5. **Session tool log** — Sidebar lists tools used this chat (compliance / audit for HR).
-6. **Twisted leave scenarios** — “I already took 2 days, one more sick leave?” uses `evaluate_leave_scenario`, not a canned FAQ.
+1. **Privacy wall** — Asking about another employee is refused; tools only see the JWT employee.
+2. **HR insights briefing** — “What should I know?” → probation, pending leave, next action.
+3. **Manager leave draft** — Draft note to real manager email (not sent).
+4. **Wellbeing / EAP nudge** — Distressed language adds confidential EAP pointer.
+5. **Session tool log** — Sidebar lists tools used this chat.
+6. **Twisted leave scenarios** — “Already took 2 days, one more sick leave?”
+7. **Submit leave request** — Creates a real pending row in SQLite + updates pending balance.
+8. **Cancel / withdraw leave** — Cancels latest pending request and frees balance.
+9. **Approval simulation** — “Simulate manager approval” moves pending → used (own requests only).
+10. **Holiday calendar** — “Is Diwali a holiday?” / list 2026 public holidays.
+11. **Blackout periods** — Year-end / Engineering release freeze blocks PL.
+12. **Leave forecast** — “If I take 5 PL what’s left?”
+13. **Onboarding checklist** — Tenure-aware checklist (great for Cara).
+14. **Escalation ticket** — Logs an open HRBP ticket in SQLite.
+15. **Policy citations** — Answers include source document / section.
+16. **Hindi / short answer mode** — “Reply in Hindi” or “short answer / voice mode”.
 
-Ask in the demo:
+Example asks:
 
-- What should I know?
-- Draft an email to my manager for 1 day of sick leave
-- Show me Alice's leave balance (while logged in as Bob)
-- I'm overwhelmed with work, can I take sick leave?
+- Submit leave for 2026-11-10 to 2026-11-11 PL
+- Cancel my pending leave
+- Simulate manager approval of my pending leave
+- Is Diwali a holiday?
+- Can I take leave last week of December?
+- If I take 5 PL what's left?
+- Onboarding checklist
+- Raise an HR ticket about leave exception
+- Show me Alice's leave balance (as Bob)
+- Reply in Hindi
 
 ## Quick start
 

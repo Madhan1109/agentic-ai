@@ -65,6 +65,38 @@ class LeaveRequest(Base):
     employee: Mapped[Employee] = relationship(back_populates="leave_requests")
 
 
+class Holiday(Base):
+    __tablename__ = "holidays"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(128))
+    holiday_date: Mapped[date] = mapped_column(Date, index=True)
+    year: Mapped[int] = mapped_column(Integer, index=True)
+    region: Mapped[str] = mapped_column(String(64), default="US")
+
+
+class BlackoutPeriod(Base):
+    __tablename__ = "blackout_periods"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(128))
+    start_date: Mapped[date] = mapped_column(Date)
+    end_date: Mapped[date] = mapped_column(Date)
+    department: Mapped[str] = mapped_column(String(128), default="ALL")
+    reason: Mapped[str] = mapped_column(Text, default="")
+
+
+class EscalationTicket(Base):
+    __tablename__ = "escalation_tickets"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    employee_pk: Mapped[int] = mapped_column(ForeignKey("employees.id"))
+    topic: Mapped[str] = mapped_column(String(255))
+    details: Mapped[str] = mapped_column(Text, default="")
+    status: Mapped[str] = mapped_column(String(32), default="open")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
 def get_engine():
     settings = get_settings()
     connect_args = {"check_same_thread": False} if settings.database_url.startswith("sqlite") else {}
