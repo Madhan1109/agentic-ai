@@ -15,17 +15,24 @@ load_dotenv()
 
 API_BASE = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
 ASSETS = Path(__file__).resolve().parent / "assets"
-LOGO_PATH = ASSETS / "ideas2it-logo.png"
+LOGIN_LOGO_PATH = ASSETS / "ideas2it-logo-square.png"
+SIDE_LOGO_PATH = ASSETS / "ideas2it-logo-wide.png"
+# Fallbacks if new assets are missing
+if not LOGIN_LOGO_PATH.exists():
+    LOGIN_LOGO_PATH = ASSETS / "ideas2it-logo.png"
+if not SIDE_LOGO_PATH.exists():
+    SIDE_LOGO_PATH = ASSETS / "ideas2it-logo.png"
 
 
-def _logo_data_uri() -> str:
-    if LOGO_PATH.exists():
-        raw = LOGO_PATH.read_bytes()
+def _logo_data_uri(path: Path) -> str:
+    if path.exists():
+        raw = path.read_bytes()
         return "data:image/png;base64," + base64.b64encode(raw).decode("ascii")
     return ""
 
 
-LOGO_URI = _logo_data_uri()
+LOGIN_LOGO_URI = _logo_data_uri(LOGIN_LOGO_PATH)
+SIDE_LOGO_URI = _logo_data_uri(SIDE_LOGO_PATH)
 
 st.set_page_config(
     page_title="Ideas2IT | HR Assistant",
@@ -247,23 +254,44 @@ APP_CSS = """
     box-shadow: none !important;
   }
 
+  /* Account name: force blue so it is readable on the white popover chip */
+  section[data-testid="stSidebar"] [data-testid="stPopover"] button,
+  section[data-testid="stSidebar"] [data-testid="stPopover"] button p,
+  section[data-testid="stSidebar"] [data-testid="stPopover"] button span,
+  section[data-testid="stSidebar"] [data-testid="stPopover"] button div {
+    color: #0b4f9c !important;
+    font-weight: 700 !important;
+  }
+  section[data-testid="stSidebar"] [data-testid="stPopover"] > div > button,
+  section[data-testid="stSidebar"] [data-testid="stPopoverButton"],
+  section[data-testid="stSidebar"] button[kind="secondary"] {
+    background: #ffffff !important;
+    border: 1px solid #c7dbf7 !important;
+    color: #0b4f9c !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+  }
+
   .side-brand {
     width: 100%;
     box-sizing: border-box;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.35);
     border-radius: 12px;
-    padding: 0.4rem 0.5rem;
+    padding: 0.45rem 0.55rem;
     margin: 0 0 0.85rem 0;
     display: flex;
     align-items: center;
     justify-content: flex-start;
   }
   .side-brand img {
-    width: 68px;
-    height: 68px;
-    object-fit: cover;
-    border-radius: 10px;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: 52px;
+    object-fit: contain;
+    object-position: left center;
+    border-radius: 0;
     display: block;
     margin: 0;
   }
@@ -399,7 +427,7 @@ if not st.session_state.token:
         st.markdown(
             f"""
             <div class="login-brand">
-              <img src="{LOGO_URI}" alt="Ideas2IT logo" />
+              <img src="{LOGIN_LOGO_URI}" alt="Ideas2IT logo" />
               <h1>HR Chat Agent</h1>
               <p>Sign in with your employee ID or work email to ask about leave, eligibility, holidays, and policy.</p>
               <div class="login-chip">Secure employee access</div>
@@ -435,7 +463,7 @@ with st.sidebar:
     st.markdown(
         f"""
         <div class="side-brand">
-          <img src="{LOGO_URI}" alt="Ideas2IT" />
+          <img src="{SIDE_LOGO_URI}" alt="Ideas2IT" />
         </div>
         """,
         unsafe_allow_html=True,
@@ -465,7 +493,7 @@ with st.sidebar:
     st.markdown('<p class="side-user-hint">Account</p>', unsafe_allow_html=True)
     full_name = (u.get("full_name") or "User").strip()
     short_name = full_name.split()[0] if full_name else "User"
-    with st.popover(f"👤 {short_name}", use_container_width=True):
+    with st.popover(short_name, use_container_width=True):
         st.markdown(f"**{full_name}**")
         st.caption(f"{u.get('employee_id', '')} · {u.get('department', '')}")
         st.caption(u.get("email", ""))
