@@ -175,46 +175,47 @@ LOGIN_CSS = """
     color: #111827 !important;
   }
 
-  /* Force email + password bordered boxes to identical width; eye sits in the right gutter */
+  /* Email + password share the same full-width bordered box; eye overlays inside password */
   [data-testid="stForm"] .stTextInput { width: 100% !important; }
   [data-testid="stForm"] [data-testid="stTextInputRootElement"] {
     width: 100% !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 0.25rem !important;
+    max-width: 100% !important;
+    position: relative !important;
+    display: block !important;
     box-sizing: border-box !important;
   }
-  [data-testid="stForm"] [data-testid="stTextInputRootElement"] > div {
-    flex: 0 0 calc(100% - 2.4rem) !important;
-    width: calc(100% - 2.4rem) !important;
-    max-width: calc(100% - 2.4rem) !important;
-    min-width: 0 !important;
-  }
-  [data-testid="stForm"] [data-baseweb="base-input"],
-  [data-testid="stForm"] [data-baseweb="input"] {
+  [data-testid="stForm"] [data-baseweb="base-input"] {
     width: 100% !important;
     max-width: 100% !important;
+    position: relative !important;
+    display: block !important;
   }
-  [data-testid="stForm"] [data-baseweb="input"] input {
+  [data-testid="stForm"] [data-baseweb="base-input"] input,
+  [data-testid="stForm"] [data-testid="stTextInputRootElement"] input {
     width: 100% !important;
-    color: #111827 !important;
+    max-width: 100% !important;
     box-sizing: border-box !important;
+    padding-right: 2.6rem !important;
+    color: #111827 !important;
   }
+  [data-testid="stForm"] [data-baseweb="base-input"] button,
   [data-testid="stForm"] [data-testid="stTextInputRootElement"] button {
-    position: static !important;
-    transform: none !important;
-    flex: 0 0 2.15rem !important;
-    width: 2.15rem !important;
-    min-width: 2.15rem !important;
-    height: 2.15rem !important;
-    min-height: 2.15rem !important;
+    position: absolute !important;
+    right: 0.45rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 1.85rem !important;
+    min-width: 1.85rem !important;
+    height: 1.85rem !important;
+    min-height: 1.85rem !important;
     margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;
     border-radius: 8px !important;
-    background: #eef2f7 !important;
+    background: transparent !important;
     box-shadow: none !important;
     color: #4b5563 !important;
+    z-index: 5 !important;
   }
 
   .stCaption, [data-testid="stCaptionContainer"] p {
