@@ -17,7 +17,8 @@ class Settings(BaseSettings):
     llm_provider: str = "auto"
 
     groq_api_key: str = ""
-    groq_model: str = "llama-3.3-70b-versatile"
+    # Free/developer tier: llama-3.3-70b-versatile was retired Aug 2026
+    groq_model: str = "openai/gpt-oss-20b"
 
     ollama_base_url: str = "http://127.0.0.1:11434"
     ollama_model: str = "llama3.1"
