@@ -252,15 +252,17 @@ APP_CSS = """
     box-sizing: border-box;
     background: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.22);
-    border-radius: 14px;
-    padding: 0.55rem 0.65rem;
+    border-radius: 12px;
+    padding: 0.4rem 0.5rem;
     margin: 0 0 0.85rem 0;
-    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
   }
   .side-brand img {
-    width: 92px;
-    max-width: 40%;
-    height: auto;
+    width: 68px;
+    height: 68px;
+    object-fit: cover;
     border-radius: 10px;
     display: block;
     margin: 0;
